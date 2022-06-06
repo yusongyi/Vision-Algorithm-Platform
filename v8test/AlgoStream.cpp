@@ -149,7 +149,48 @@ void AlgoStream::loadDll() {
 string getOutPath(string uuid, string node) {
 	return  uuid + "_" + node + ".ply";
 }
+std::string GBKToUTF8(const std::string& strGBK)
+{
+	std::string strOutUTF8 = "";
+	WCHAR * str1;
+	int n = MultiByteToWideChar(CP_ACP, 0, strGBK.c_str(), -1, NULL, 0);
+	str1 = new WCHAR[n];
+	MultiByteToWideChar(CP_ACP, 0, strGBK.c_str(), -1, str1, n);
+	n = WideCharToMultiByte(CP_UTF8, 0, str1, -1, NULL, 0, NULL, NULL);
+	char * str2 = new char[n];
+	WideCharToMultiByte(CP_UTF8, 0, str1, -1, str2, n, NULL, NULL);
+	strOutUTF8 = str2;
+	delete[]str1;
+	str1 = NULL;
+	delete[]str2;
+	str2 = NULL;
+	return strOutUTF8;
+}
+
+std::string UTF8ToGBK(const std::string& strUTF8)
+{
+	int len = MultiByteToWideChar(CP_UTF8, 0, strUTF8.c_str(), -1, NULL, 0);
+	WCHAR * wszGBK = new WCHAR[len + 1];
+	memset(wszGBK, 0, len * 2 + 2);
+	MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUTF8.c_str(), -1, wszGBK, len);
+
+	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
+	char *szGBK = new char[len + 1];
+	memset(szGBK, 0, len + 1);
+	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
+	//strUTF8 = szGBK;
+	std::string strTemp(szGBK);
+	delete[]szGBK;
+	delete[]wszGBK;
+	return strTemp;
+}
  
+void AlgoStream::sendMsg(string msg) {
+	//向socket输出
+	if (clientWs != NULL) {
+		WebSockServer::Instance().Send(clientWs, GBKToUTF8(msg), WsOpcode::TEXT);
+	}
+}
 
 void AlgoStream::sendNodeRes(AlgoNode node) {
 	Json::Value root;
@@ -158,12 +199,7 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 	root["outPath"] = Json::Value(node.outPath);
 	Json::FastWriter fw;
 	cout << "node res:" << fw.write(root) << endl;
-
-	//向socket输出
-	if (clientWs != NULL) {
-		WebSockServer::Instance().Send(clientWs, fw.write(root), WsOpcode::TEXT);
-	}
-	return ;
+	sendMsg(fw.write(root));
 }
 
 //显示
@@ -214,24 +250,26 @@ void AlgoStream::start(pcl::PointCloud<PointT>::Ptr input){
 		sendNodeRes(algos[i]);
 
 		//本机预览
-		visualization_point(input, res); 
+		//visualization_point(input, res); 
 
 		//下个节点的输入为本次的输出
 		input = res;
 
 		//调用后置处理函数
 	}
+	sendMsg("stream closed!");
 }
 
 
-void AlgoStream::init(string doc) {
+int AlgoStream::init(string doc) {
 
 	Json::Reader reader;
 	Json::Value root;
 
 	if (!reader.parse(doc, root, false)) {
+		sendMsg("node init error");
 		printf("failed to parse!\n");
-		return ;
+		return -1;
 	}
 
 	int siNum = root.size();
@@ -244,6 +282,7 @@ void AlgoStream::init(string doc) {
 		Json::Value DevJson = root[i];
 		std::string DevStr = DevJson["method"].asString();
 		cout << "开始初始化‘" << DevStr << "’算法模块" << endl;
+		 
 		int asParamSize = DevJson["paramSize"].asInt();
 		int paramSize = DevJson["params"].size();
 		float* params = new float[paramSize]();
@@ -269,13 +308,14 @@ void AlgoStream::init(string doc) {
 			cout << DevStr << ":模块初始化成功" << endl;
 		}
 		else {
+			sendMsg(DevStr+string(":模块初始化失败"));
 			cout << DevStr << ":模块初始化失败" << endl; 
-			return ;
+			return -1;
 		}
 		cout << "----------------" << endl;
 	}
 
-	return;
+	return 0;
 
 	
 }

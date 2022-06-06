@@ -30,6 +30,8 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 	cout << "开始解析数据："<< data << endl;
 	try {
 		if (!reader.parse(data, root, false)) {
+
+			stream.sendMsg("failed to parse!");
 			printf("failed to parse!\n");
 			return;
 		}
@@ -44,7 +46,10 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 
 			//string doc("[{\"method\":\"voxelGrid\",\"paramSize\":1,\"params\":[0.1]}]");
 			string doc = root["doc"].asString();
-			stream.init(doc);
+			int init_res = stream.init(doc);
+			if (init_res != 0) {
+				return;
+			}
 
 			string dataPath = root["dataPath"].asString();
 			pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
@@ -55,11 +60,12 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			stream.start(cloud);
 		}
 	}catch (exception const & e) {
+		stream.sendMsg(strcat("error:",e.what()));
 		std::cout << e.what() << std::endl;
 		return ;
 	}
 
-	WebSockServer::Instance().Send(pClient, data, WsOpcode::TEXT);
+	stream.sendMsg(data);
 }
 
 void on_open(void* pClient)
@@ -98,33 +104,33 @@ int _tmain(int argc, _TCHAR* argv[])
 	stream.loadDll();
 
 
-	//WebSockServer::Instance().Init(9002,
-	//	boost::bind(on_open, _1),
-	//	boost::bind(on_close, _1, _2),
-	//	boost::bind(on_message, _1, _2, _3)
-	//);
-	//WebSockServer::Instance().StartServer();
+	WebSockServer::Instance().Init(9002,
+		boost::bind(on_open, _1),
+		boost::bind(on_close, _1, _2),
+		boost::bind(on_message, _1, _2, _3)
+	);
+	WebSockServer::Instance().StartServer();
 
-	//std::string str;
-	//while (std::cin >> str)
-	//{
-	//	if (pClient != nullptr)
-	//	{
-	//		if (str == "close")
-	//		{
-	//			WebSockServer::Instance().Close(pClient);
-	//		}
-	//		else
-	//		{
-	//			WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
-	//		}
-	//	}
-	//} 
+	std::string str;
+	while (std::cin >> str)
+	{
+		if (pClient != nullptr)
+		{
+			if (str == "close")
+			{
+				WebSockServer::Instance().Close(pClient);
+			}
+			else
+			{
+				WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
+			}
+		}
+	} 
 
 
 	cout << "开始解析脚本" << endl;
 	string doc("[{\"method\":\"statisticalOutlierRemoval\",\"paramSize\":2,\"params\":[1,0.1]},{\"method\":\"voxelGrid\",\"paramSize\":1,\"params\":[0.1]}]");
-
+ 
 
 	//string doc = readConfig("algo.json");
 	cout << doc << endl;

@@ -123,6 +123,7 @@ bool WebSockServer::Send(void* pClient, const std::string data, WsOpcode opcode)
 	}
 	else
 	{
+		std::cout << "> Error sending message: " << ec.message() << std::endl;
 		return false;
 	}
 }

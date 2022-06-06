@@ -15,9 +15,9 @@ public:
 	string uuid;
 
 	void loadDll();
-	void init(string doc);
+	int init(string doc);
 	void start(pcl::PointCloud<PointT>::Ptr input);
-	void sendNodeRes(AlgoNode node);
-
+	void sendNodeRes(AlgoNode node); 
+	void sendMsg(string msg);
 };
 
