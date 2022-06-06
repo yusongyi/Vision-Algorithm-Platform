@@ -1,0 +1,14 @@
+{
+	"type": 0,
+	"uuid": "1111",
+	"doc": [{
+		"method": "statisticalOutlierRemoval",
+		"paramSize": 2,
+		"params": [1, 0.1]
+	}, {
+		"method": "voxelGrid",
+		"paramSize": 1,
+		"params": [0.1]
+	}],
+	"dataPath ": " Lucy100k.ply "
+}
