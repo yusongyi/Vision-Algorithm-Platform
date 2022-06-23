@@ -1,8 +1,11 @@
 #include "StdAfx.h"
 #include<windows.h>  
+#include <ShellAPI.h>
 #include "AlgoStream.h"  
 #include "AlgoNode.h"
 #include<iostream>
+#include <thread>
+#include <time.h>
 #include "string"
 #include <map>
 #include "json/json.h"
@@ -13,13 +16,29 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/filters/statistical_outlier_removal.h> 
 #include <pcl/kdtree/kdtree.h>
+#include <liblas/liblas.hpp>
 #include "web_sock_server.h"
+#include "Thread.h"
+#include "SmartTool.h"
+
 
 using namespace pcl;
 using namespace std;
+
+//存储各个算法的地址
 map<string, RUN_FUN> mFuncPtr;
 
 typedef pcl::PointXYZ PointT;
+
+//DLL 和 点云文件的根目录
+string AlgoStream::ROOT_PATH = "E:\\data\\pcl\\";
+
+//potree转换器的程序地址
+static string CONVERT_TOOL_PATH = AlgoStream::ROOT_PATH + "potree\\PotreeConverter.exe";
+
+//演示模式的暂停秒数
+static int DEMO_SLEEP = 2;
+
 
 //根据名字获取函数
 RUN_FUN getFunction(string funcName)
@@ -30,63 +49,8 @@ RUN_FUN getFunction(string funcName)
 		return it->second;
 	return 0;
 }
-//获取此目录下所有文件，并根据扩展名过滤
-void getFiles(string path, string exd, vector<string>& files)
-{
-	//cout << "getFiles()" << path<< endl; 
-	//文件句柄
-	long  hFile = 0;
-	//文件信息
-	struct _finddata_t fileinfo;
-	string pathName, exdName;
-
-	if (0 != strcmp(exd.c_str(), ""))
-	{
-		exdName = "\\algo1*." + exd;
-	}
-	else
-	{
-		exdName = "\\algo1*";
-	}
-
-	if ((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)
-	{
-		do
-		{
-			//cout << fileinfo.name << endl; 
-
-			//如果是文件夹中仍有文件夹,迭代之
-			//如果不是,加入列表
-			if ((fileinfo.attrib & _A_SUBDIR))
-			{
-				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
-					getFiles(pathName.assign(path).append("\\").append(fileinfo.name), exd, files);
-			}
-			else
-			{
-				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
-					files.push_back(pathName.assign(path).append("\\").append(fileinfo.name));
-			}
-		} while (_findnext(hFile, &fileinfo) == 0);
-		_findclose(hFile);
-	}
-}
-//获取文件的名称
-void get_FileBaseName(std::string path, std::string &name)
-{
-	for (int i = path.size() - 1; i > 0; i--)
-	{
-		if (path[i] == '\\' || path[i] == '/')
-		{
-			name = path.substr(i + 1);
-			return;
-		}
-	}
-	name = path;
-}
-
-
-
+ 
+//查到DLL
 void AlgoStream::loadDll() {
 	cout << "开始查找dll并注册" << endl;
 	vector<string> files;
@@ -103,10 +67,10 @@ void AlgoStream::loadDll() {
 	//列表文件输出路径 
 	int size = files.size();
 
-	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-	pcl::io::loadPCDFile("table.pcd", *cloud);
-	std::cout << "original cloud size : " << cloud->size() << std::endl;
-	pcl::PointCloud<PointT>::Ptr res(new pcl::PointCloud<PointT>); 
+	//pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+	//pcl::io::loadPCDFile("table.pcd", *cloud);
+	//std::cout << "original cloud size : " << cloud->size() << std::endl;
+	//pcl::PointCloud<PointT>::Ptr res(new pcl::PointCloud<PointT>); 
 	for (int i = 0; i < size; i++)
 	{
 		cout << "找到 DLL:" << files[i] << endl;
@@ -128,10 +92,10 @@ void AlgoStream::loadDll() {
 			RUN_FUN fp1 = RUN_FUN(GetProcAddress(hDll, method.c_str()));
 			if (fp1 != NULL)
 			{
-				float balance[2] = { 0.1,0.1 };
+			/*	float balance[2] = { 0.1,0.1 };
 				cout << "函数测试数据大小:" << cloud->size() << endl;
 				fp1(cloud, res, balance);
-				cout << "函数测试结果大小:" << res->size() << endl;
+				cout << "函数测试结果大小:" << res->size() << endl;*/
 
 
 				mFuncPtr.insert(make_pair(method, fp1));
@@ -145,152 +109,193 @@ void AlgoStream::loadDll() {
 	cout << "----------------" << endl;
 }
 
-
+//获取ply点云文件的输出路径，根路径/uuid_算法名称.ply
 string getOutPath(string uuid, string node) {
-	return  uuid + "_" + node + ".ply";
-}
-std::string GBKToUTF8(const std::string& strGBK)
-{
-	std::string strOutUTF8 = "";
-	WCHAR * str1;
-	int n = MultiByteToWideChar(CP_ACP, 0, strGBK.c_str(), -1, NULL, 0);
-	str1 = new WCHAR[n];
-	MultiByteToWideChar(CP_ACP, 0, strGBK.c_str(), -1, str1, n);
-	n = WideCharToMultiByte(CP_UTF8, 0, str1, -1, NULL, 0, NULL, NULL);
-	char * str2 = new char[n];
-	WideCharToMultiByte(CP_UTF8, 0, str1, -1, str2, n, NULL, NULL);
-	strOutUTF8 = str2;
-	delete[]str1;
-	str1 = NULL;
-	delete[]str2;
-	str2 = NULL;
-	return strOutUTF8;
+	return AlgoStream::ROOT_PATH+uuid + "_" + node + ".ply";
 }
 
-std::string UTF8ToGBK(const std::string& strUTF8)
-{
-	int len = MultiByteToWideChar(CP_UTF8, 0, strUTF8.c_str(), -1, NULL, 0);
-	WCHAR * wszGBK = new WCHAR[len + 1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUTF8.c_str(), -1, wszGBK, len);
+/*
 
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char *szGBK = new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
-	//strUTF8 = szGBK;
-	std::string strTemp(szGBK);
-	delete[]szGBK;
-	delete[]wszGBK;
-	return strTemp;
+调用PotreeConverter生成Potree文件
+	stream: 算法流程，用于获取uuid
+	node  : 算法节点，需要节点名称、此节点的生成点云文件
+
+*/
+void genPotreeFiles(AlgoStream stream, AlgoNode *node) {
+	node->potreePath = "potree_res\\"+stream.uuid + "_" + node->name;
+	string params = node->outPath + " -o " + node->potreePath;
+
+	ShellExecuteA(NULL, "open", CONVERT_TOOL_PATH.c_str(), params.c_str(), AlgoStream::ROOT_PATH.c_str(), SW_SHOW);
 }
- 
-void AlgoStream::sendMsg(string msg) {
+/*
+
+将传入的点云文数据生成点云文件，并转换为Potree文件
+	cloud : 点云数据
+	stream: 算法流程，用于获取uuid
+	node  : 算法节点，需要节点名称、此节点的生成点云文件
+
+*/
+void genPotreeFiles(pcl::PointCloud<PointT>::Ptr cloud, AlgoStream stream, AlgoNode *node) {
+	//输出ply
+	pcl::io::savePLYFileBinary(node->outPath, *cloud);
+	genPotreeFiles(stream, node);
+}
+  
+/*
+	
+发送JSON格式WebSocket消息
+	type: 类型 STREAM_START  = 1,
+			   STREAM_DOING = 2,
+			   STREAM_END    = 3,
+			   STREAM_FAIL  = 9
+	msg: 信息，可能是json数据
+
+*/
+void AlgoStream::sendMsg(StreamOpcode type,string msg) {
+	Json::Value root;
+	root["type"] = Json::Value(type);
+	root["msg"] = Json::Value(msg);
+	Json::FastWriter fw;
 	//向socket输出
-	if (clientWs != NULL) {
-		WebSockServer::Instance().Send(clientWs, GBKToUTF8(msg), WsOpcode::TEXT);
+	if (clientWs != NULL) { 
+		cout << "sendMsg:" << fw.write(root) << endl;
+		WebSockServer::Instance().Send(clientWs, GBKToUTF8(fw.write(root)), WsOpcode::TEXT);
 	}
 }
 
+/*
+
+发送算法节点的执行结果
+	node: 算法节点
+
+*/
 void AlgoStream::sendNodeRes(AlgoNode node) {
 	Json::Value root;
+	root["id"] = Json::Value(node.id);
 	root["uuid"] = Json::Value(uuid);
 	root["node"] = Json::Value(node.name);
-	root["outPath"] = Json::Value(node.outPath);
+	root["outPath"] = Json::Value(node.potreePath);
+
+	if (node.conditionType != -1) {
+		root["conditionCount"] = Json::Value(node.conditionCount);
+		root["conditionNext"] = Json::Value(node.conditionNext);
+	}
+
 	Json::FastWriter fw;
-	cout << "node res:" << fw.write(root) << endl;
-	sendMsg(fw.write(root));
+	sendMsg(STREAM_DOING,fw.write(root));
 }
 
-//显示
-void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, PointCloud<PointXYZ>::Ptr &sor_cloud
-	//, PointCloud<PointXYZ>::Ptr &voxel, PointCloud<PointXYZ>::Ptr &uniform
-) {
-	visualization::PCLVisualizer::Ptr viewer(new visualization::PCLVisualizer("3d viewer"));
-	int v1(0), v2(0), v3(0), v4(0);
-	viewer->createViewPort(0.0, 0.0, 0.5, 1.0, v1);
-	viewer->addPointCloud(raw_point, "cloud1", v1);
 
+void AlgoStream::start(){
 
-	viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
-	viewer->addPointCloud(sor_cloud, "cloud2", v2);
-
-
-	/*viewer->createViewPort(0.5, 0.0, 0.75, 1.0, v3);
-	viewer->addPointCloud(voxel, "cloud3", v3);
-
-	viewer->createViewPort(0.75, 0.0, 1, 1.0, v3);
-	viewer->addPointCloud(uniform, "cloud4", v3);*/
-
-	viewer->spin();
-}
-
-void AlgoStream::start(pcl::PointCloud<PointT>::Ptr input){
 	printf("输入数据大小:%d\r\n", input->size());
+
+	//转换输入文件
+	genPotreeFiles(*this, &fileNode);
+
+	//开始时发送初始的Potree文件
+	Json::Value root; 
+	root["uuid"] = Json::Value(uuid);
+	root["id"] = Json::Value(fileNode.id);
+	root["outPath"] = Json::Value(fileNode.potreePath);
+	Json::FastWriter fw; 
+	sendMsg(STREAM_START, fw.write(root));
+
+
 	for(int i=0;i<size;i++){ 
-		//调用前置处理函数
+		algos[i].input = input; 
 
-		algos[i].input = input;
+		//输出的点云文件地址
+		algos[i].outPath = getOutPath(uuid, algos[i].name); 
 
-		//输出的点云
 		pcl::PointCloud<PointT>::Ptr res(new pcl::PointCloud<PointT>);
 		algos[i].out = res;
-		algos[i].outPath = getOutPath(uuid, algos[i].name);
+ 
+		do { 
+			//调用函数fun1 
+			algos[i].runAddr(input, algos[i].out, algos[i].params);
 
-		//调用函数fun1 
-		algos[i].runAddr(input, res, algos[i].params);
+			//生成Potree文件
+			genPotreeFiles(input, *this, &algos[i]); 
 
-		//输出ply
-		pcl::io::savePLYFileBinary(algos[i].outPath, *res);
+			//分支结构则进行计算
+			if (algos[i].conditionType != -1) {
+				float remain = algos[i].out->size() / (float)(algos[i].input->size());
 
-		//输出结果
-		printf("RUN_FUN:%s,res:%d,%d\r\n", algos[i].name.c_str(), input->size(), res->size());
+				printf("BRANCH_RES: node:%s,input size:%d,out size:%d,remain:%f \r\n", algos[i].name.c_str(), algos[i].input->size(), algos[i].out->size(), remain);
 
-		//输出本计算节点结果
-		sendNodeRes(algos[i]);
+				algos[i].conditionCount++;
 
-		//本机预览
-		//visualization_point(input, res); 
+				//判断剩余点云数量是否符合条件
+				algos[i].conditionNext = (
+					(algos[i].conditionType == 0 && remain <= algos[i].conditionParams[0]) ||
+					(algos[i].conditionType == 1 && remain >= algos[i].conditionParams[0]) ||
+					(algos[i].conditionType == 2 && remain != algos[i].conditionParams[0])
+					)
+					&&
+					algos[i].conditionCount < 99;
+			}
+			else {
+				//输出结果
+				printf("NODE_RES: node:%s,input size:%d,out size:%d \r\n", algos[i].name.c_str(), algos[i].input->size(), algos[i].out->size());
 
-		//下个节点的输入为本次的输出
-		input = res;
+				//不是分支结构则默认仅执行一次
+				algos[i].conditionNext = false;
+			}
 
-		//调用后置处理函数
+			//输出本计算节点结果
+			sendNodeRes(algos[i]);
+
+			//本机预览
+			if (type == 1) {
+				visualization_point(input, algos[i].out);
+			}
+
+			//演示模式暂停
+			if (type == 2) {
+				mySleep(DEMO_SLEEP);
+			}
+
+			//下个节点的输入为本次的输出
+			input = algos[i].out;
+		} while (algos[i].conditionNext); 
 	}
-	sendMsg("stream closed!");
+	sendMsg(STREAM_END,uuid);
 }
 
 
-int AlgoStream::init(string doc) {
+int AlgoStream::init(Json::Value doc) {
+ 
+	//默认第一个节点的第一个参数为数据文件地址
+	string dataPath = doc[0]["params"][0].asString();
 
-	Json::Reader reader;
-	Json::Value root;
 
-	if (!reader.parse(doc, root, false)) {
-		sendMsg("node init error");
-		printf("failed to parse!\n");
-		return -1;
-	}
+	//初始文件输入节点
+	fileNode.name = "inputFile";
+	fileNode.id = doc[0]["nodeId"].asString();
+	fileNode.outPath = AlgoStream::ROOT_PATH + dataPath;
 
-	int siNum = root.size();
+	//读取点云文件到input中
+	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+	readPointCloud(fileNode.outPath, cloud);
+	input = cloud;
+
+	//初始化算法模块前需要将第一个节点去掉 
+	doc.removeIndex(0,nullptr);
+	 
+
+	//初始化算法模块
+	int siNum = doc.size();
 	cout << "脚本共" << siNum << "个算法模块" << endl;
-	cout << "----------------" << endl;
 	size = siNum;
 	algos = new AlgoNode[siNum]();
 	for (int i = 0; i < siNum; i++)
 	{
-		Json::Value DevJson = root[i];
+		Json::Value DevJson = doc[i];
 		std::string DevStr = DevJson["method"].asString();
 		cout << "开始初始化‘" << DevStr << "’算法模块" << endl;
 		 
-		int asParamSize = DevJson["paramSize"].asInt();
-		int paramSize = DevJson["params"].size();
-		float* params = new float[paramSize]();
-		for (int j = 0; j < paramSize; j++) {
-			params[j] = DevJson["params"][j].asFloat();
-		}
-
-
+		 
 		//获取函数
 		RUN_FUN fptr = getFunction(DevStr.c_str());
 
@@ -298,19 +303,50 @@ int AlgoStream::init(string doc) {
 		{
 			//初始化算法节点
 			AlgoNode node;
-			//node.id = strcat("00", i+"");
+			node.id = DevJson["nodeId"].asString();
 			node.name = DevStr.c_str();
-			node.paramSize = asParamSize;
 			node.runAddr = fptr;
-			node.params = params;
-			algos[i] = node;
 
+			//参数初始化
+			if (DevJson["params"].type() != Json::nullValue) { 
+				int paramSize = DevJson["params"].size();
+				float* params = new float[paramSize]();
+				for (int j = 0; j < paramSize; j++) {
+					params[j] = DevJson["params"][j].asFloat();
+				}
+				node.paramSize = paramSize;
+				node.params = params;
+			}
+
+			//分支条件初始化
+			if (DevJson["conditionType"].type() != Json::nullValue) {
+				node.conditionType = DevJson["conditionType"].asInt();
+
+				if (DevJson["conditionParams"].type() == Json::nullValue) {
+					cout << DevStr << ":模块初始化失败" << endl;
+				}
+				else { 
+					int conditionParamSize = DevJson["conditionParams"].size();
+					node.conditionParamSize = conditionParamSize;
+
+					float* conditionParams = new float[conditionParamSize]();
+					for (int k = 0; k < conditionParamSize; k++) {
+						conditionParams[k] = DevJson["conditionParams"][k].asFloat();
+					}
+					node.conditionParams = conditionParams;
+				}
+				
+			}
+			else {
+				node.conditionType = -1;
+			}
+			algos[i] = node; 
 			cout << DevStr << ":模块初始化成功" << endl;
 		}
 		else {
-			sendMsg(DevStr+string(":模块初始化失败"));
+			sendMsg(STREAM_FAIL,DevStr+string(":模块初始化失败"));
 			cout << DevStr << ":模块初始化失败" << endl; 
-			return -1;
+			//return -1;
 		}
 		cout << "----------------" << endl;
 	}
@@ -319,6 +355,3 @@ int AlgoStream::init(string doc) {
 
 	
 }
-
-
-
