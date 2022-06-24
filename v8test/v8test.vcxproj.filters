@@ -50,9 +50,6 @@
     <ClCompile Include="AlgoNode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="v8test.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="web_sock_server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -60,6 +57,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SmartTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="v8test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

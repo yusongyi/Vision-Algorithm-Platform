@@ -174,6 +174,7 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 	root["id"] = Json::Value(node.id);
 	root["uuid"] = Json::Value(uuid);
 	root["node"] = Json::Value(node.name);
+	root["chName"] = Json::Value(node.chName);
 	root["outPath"] = Json::Value(node.potreePath);
 
 	if (node.conditionType != -1) {
@@ -304,6 +305,7 @@ int AlgoStream::init(Json::Value doc) {
 			//初始化算法节点
 			AlgoNode node;
 			node.id = DevJson["nodeId"].asString();
+			node.chName = DevJson["chName"].asString();
 			node.name = DevStr.c_str();
 			node.runAddr = fptr;
 

@@ -1,8 +1,9 @@
-// v8test.cpp : 定义控制台应用程序的入口点。
-//
+//// v8test.cpp : 定义控制台应用程序的入口点。
+////
 #include "stdafx.h" 
 #include<windows.h>  
 #include<iostream> 
+#include<future>
 #include "string"
 #include <map>
 #include "json/json.h"
@@ -34,7 +35,9 @@ void parseStream(Json::Value root) {
 	if (init_res != 0) {
 		return;
 	}
-	stream.start(); 
+
+	//异步执行
+	new boost::thread(&AlgoStream::start, &stream); 
 }
 
 
@@ -60,8 +63,7 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			printf("failed to parse!\n");
 			return;
 		}
-		parseStream(root);
-		
+		parseStream(root);  
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
 		std::cout << e.what() << std::endl;
@@ -107,28 +109,28 @@ int _tmain(int argc, _TCHAR* argv[])
 	stream.loadDll();
 
 
-	//WebSockServer::Instance().Init(9002,
-	//	boost::bind(on_open, _1),
-	//	boost::bind(on_close, _1, _2),
-	//	boost::bind(on_message, _1, _2, _3)
-	//);
-	//WebSockServer::Instance().StartServer();
+	WebSockServer::Instance().Init(9002,
+		boost::bind(on_open, _1),
+		boost::bind(on_close, _1, _2),
+		boost::bind(on_message, _1, _2, _3)
+	);
+	WebSockServer::Instance().StartServer();
 
-	//std::string str;
-	//while (std::cin >> str)
-	//{
-	//	if (pClient != nullptr)
-	//	{
-	//		if (str == "close")
-	//		{
-	//			WebSockServer::Instance().Close(pClient);
-	//		}
-	//		else
-	//		{
-	//			WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
-	//		}
-	//	}
-	//} 
+	std::string str;
+	while (std::cin >> str)
+	{
+		if (pClient != nullptr)
+		{
+			if (str == "close")
+			{
+				WebSockServer::Instance().Close(pClient);
+			}
+			else
+			{
+				WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
+			}
+		}
+	} 
 
 
 	cout << "开始解析脚本" << endl;

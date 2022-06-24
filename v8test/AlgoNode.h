@@ -16,6 +16,7 @@ public:
 	AlgoNode(void);
 	virtual ~AlgoNode(void); 
 	string name;
+	string chName;
 	string id;
 	RUN_FUN runAddr;
 	long preAddr; 
