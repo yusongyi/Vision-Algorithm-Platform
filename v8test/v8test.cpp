@@ -105,6 +105,16 @@ static std::string readConfig(const char* path) {
 int _tmain(int argc, _TCHAR* argv[])
 {
  
+	string configStr = readConfig("config.json");
+	Json::Reader configReader;
+	Json::Value config;
+	 
+	  
+	if (!configReader.parse(configStr, config, false)) {
+		printf("config error!\n");
+		return -1;
+	} 
+	stream.loadConfig(config);
 
 	stream.loadDll();
 

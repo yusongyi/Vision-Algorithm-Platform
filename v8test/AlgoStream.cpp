@@ -49,7 +49,24 @@ RUN_FUN getFunction(string funcName)
 		return it->second;
 	return 0;
 }
- 
+
+void AlgoStream::loadConfig(Json::Value config) {
+	if (config["rootPath"].type() != Json::nullValue) { 
+		AlgoStream::ROOT_PATH = config["rootPath"].asString();
+	}
+	if (config["convertToolPath"].type() != Json::nullValue) {
+		CONVERT_TOOL_PATH = config["convertToolPath"].asString();
+	}
+	if (config["demoSleep"].type() != Json::nullValue) {
+		DEMO_SLEEP = config["demoSleep"].asInt();
+	}
+
+	cout << "ROOT_PATH:" << AlgoStream::ROOT_PATH << endl;
+	cout << "CONVERT_TOOL_PATH:" << CONVERT_TOOL_PATH << endl;
+	cout << "DEMO_SLEEP:" << DEMO_SLEEP << endl;
+
+}
+
 //查到DLL
 void AlgoStream::loadDll() {
 	cout << "开始查找dll并注册" << endl;
@@ -198,6 +215,7 @@ void AlgoStream::start(){
 	Json::Value root; 
 	root["uuid"] = Json::Value(uuid);
 	root["id"] = Json::Value(fileNode.id);
+	root["chName"] = Json::Value(fileNode.chName);
 	root["outPath"] = Json::Value(fileNode.potreePath);
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
@@ -272,7 +290,8 @@ int AlgoStream::init(Json::Value doc) {
 
 
 	//初始文件输入节点
-	fileNode.name = "inputFile";
+	fileNode.name = "inputFile"; 
+	fileNode.chName = doc[0]["chName"].asString();
 	fileNode.id = doc[0]["nodeId"].asString();
 	fileNode.outPath = AlgoStream::ROOT_PATH + dataPath;
 

@@ -40,3 +40,5 @@ void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, PointCloud<PointX
 	//, PointCloud<PointXYZ>::Ptr &voxel, PointCloud<PointXYZ>::Ptr &uniform
 );
 
+static std::string readConfig(const char* path);
+

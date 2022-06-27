@@ -27,6 +27,8 @@ public:
 	void* clientWs;
 	string uuid;
 
+
+	void loadConfig(Json::Value config);
 	void loadDll();
 	int init(Json::Value doc);
 	void start();
