@@ -220,6 +220,10 @@ void AlgoStream::start(){
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
 
+	//演示模式暂停
+	if (type == 2) {
+		mySleep(DEMO_SLEEP);
+	}
 
 	for(int i=0;i<size;i++){ 
 		algos[i].input = input; 
@@ -235,7 +239,7 @@ void AlgoStream::start(){
 			algos[i].runAddr(input, algos[i].out, algos[i].params);
 
 			//生成Potree文件
-			genPotreeFiles(input, *this, &algos[i]); 
+			genPotreeFiles(algos[i].out, *this, &algos[i]);
 
 			//分支结构则进行计算
 			if (algos[i].conditionType != -1) {

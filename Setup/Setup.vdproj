@@ -93,6 +93,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_288D6C08FD3742909E95D8B856D38F21"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2A2D71244960443A9FFBDE6650DCB8FC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -459,12 +465,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_DE52362803484DDFB7003DD52626747F"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_DECF4DDF79034F5A98643FE3751B80B8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -607,6 +607,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
+            }
         }
         "Release"
         {
@@ -623,6 +639,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -890,6 +914,26 @@
             "TargetName" = "8:bz2d.dll"
             "Tag" = "8:"
             "Folder" = "8:_5FA1E667CD014B18807DBC558377667D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_288D6C08FD3742909E95D8B856D38F21"
+            {
+            "SourcePath" = "8:AlgoStream.ico"
+            "TargetName" = "8:AlgoStream.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_D5B656C0B46643268D204B22BB68B401"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -2124,26 +2168,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DE52362803484DDFB7003DD52626747F"
-            {
-            "SourcePath" = "8:C:\\Users\\YuSongyi\\Desktop\\AlgoStream.ico"
-            "TargetName" = "8:AlgoStream.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_D5B656C0B46643268D204B22BB68B401"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DECF4DDF79034F5A98643FE3751B80B8"
             {
             "SourcePath" = "8:..\\Debug\\vtkFiltersGeometry-9.0d.dll"
@@ -2622,15 +2646,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:AlgoStream"
-        "ProductCode" = "8:{B40F7BCA-61A5-41CC-B6BA-6B4F71A13BC2}"
-        "PackageCode" = "8:{2FD12770-7B9D-4180-BD2E-42EE5483D46D}"
+        "ProductCode" = "8:{9BCA2D61-2D57-4247-AD26-BC5D969E9A27}"
+        "PackageCode" = "8:{12239830-91D4-484E-B8DB-27FED0A41807}"
         "UpgradeCode" = "8:{F6052BCA-7107-4EB2-B921-97038C6AE52D}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.0.1"
         "Manufacturer" = "8:Smart"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -2768,7 +2792,7 @@
             "Target" = "8:_FF1329A3765B427F8A081C8BC8FDFA57"
             "Folder" = "8:_DEFB67331702463FB557411E05D2BC4E"
             "WorkingFolder" = "8:_5FA1E667CD014B18807DBC558377667D"
-            "Icon" = "8:_DE52362803484DDFB7003DD52626747F"
+            "Icon" = "8:_288D6C08FD3742909E95D8B856D38F21"
             "Feature" = "8:"
             }
         }
