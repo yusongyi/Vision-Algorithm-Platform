@@ -119,37 +119,37 @@ int _tmain(int argc, _TCHAR* argv[])
 	stream.loadDll();
 
 
-	//WebSockServer::Instance().Init(9002,
-	//	boost::bind(on_open, _1),
-	//	boost::bind(on_close, _1, _2),
-	//	boost::bind(on_message, _1, _2, _3)
-	//);
-	//WebSockServer::Instance().StartServer();
+	WebSockServer::Instance().Init(9002,
+		boost::bind(on_open, _1),
+		boost::bind(on_close, _1, _2),
+		boost::bind(on_message, _1, _2, _3)
+	);
+	WebSockServer::Instance().StartServer();
 
-	//std::string str;
-	//while (std::cin >> str)
-	//{
-	//	if (pClient != nullptr)
-	//	{
-	//		if (str == "close")
-	//		{
-	//			WebSockServer::Instance().Close(pClient);
-	//		}
-	//		else
-	//		{
-	//			WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
-	//		}
-	//	}
-	//} 
+	std::string str;
+	while (std::cin >> str)
+	{
+		if (pClient != nullptr)
+		{
+			if (str == "close")
+			{
+				WebSockServer::Instance().Close(pClient);
+			}
+			else
+			{
+				WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
+			}
+		}
+	} 
 
 
-	cout << "开始解析脚本" << endl;
-	string doc("{\"type\":1,\"uuid\":\"1b8459b2-0297-4029-9f5b-bec5d2a6c27f\",\"doc\":[{\"nodeId\":\"P1\",\"method\":\"FileInput\",\"name\":\"FileInput\",\"chName\":\"输入点云\",\"inputs\":[],\"outputs\":[{\"pid\":\"P1\",\"id\":\"OUT111\",\"name\":\"上\",\"dataType\":1}],\"params\":[\"table.ply\"]},{\"nodeId\":\"P2\",\"name\":\"Shangbian\",\"chName\":\"上边\",\"method\":\"Shangbian\",\"inputs\":[{\"pid\":\"P2\",\"id\":\"INT222\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P2\",\"id\":\"OUT221\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P2\",\"id\":\"OUT222\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P2\",\"id\":\"OUT223\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P4\",\"name\":\"Jiaodian\",\"chName\":\"交点\",\"method\":\"Jiaodian\",\"inputs\":[{\"pid\":\"P4\",\"id\":\"INT441\",\"name\":\"特征一\",\"resourceId\":\"OUT222\",\"dataType\":3},{\"pid\":\"P4\",\"id\":\"INT442\",\"name\":\"特征二\",\"resourceId\":\"OUT332\",\"dataType\":3}],\"outputs\":[{\"pid\":\"P4\",\"id\":\"OUT441\",\"name\":\"交叉点\",\"dataType\":4}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P3\",\"name\":\"Zuobian\",\"chName\":\"左边\",\"method\":\"Zuobian\",\"inputs\":[{\"pid\":\"P3\",\"id\":\"INT333\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P3\",\"id\":\"OUT331\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P3\",\"id\":\"OUT332\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P3\",\"id\":\"OUT333\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]}]}");
-	Json::Reader reader;
-	Json::Value root; 
-	reader.parse(doc, root, false);
-	parseStream(root);
- 
+	//cout << "开始解析脚本" << endl;
+	//string doc("{\"type\":1,\"uuid\":\"1b8459b2-0297-4029-9f5b-bec5d2a6c27f\",\"doc\":[{\"nodeId\":\"P1\",\"method\":\"FileInput\",\"name\":\"FileInput\",\"chName\":\"输入点云\",\"inputs\":[],\"outputs\":[{\"pid\":\"P1\",\"id\":\"OUT111\",\"name\":\"上\",\"dataType\":1}],\"params\":[\"table.ply\"]},{\"nodeId\":\"P2\",\"name\":\"Shangbian\",\"chName\":\"上边\",\"method\":\"Shangbian\",\"inputs\":[{\"pid\":\"P2\",\"id\":\"INT222\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P2\",\"id\":\"OUT221\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P2\",\"id\":\"OUT222\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P2\",\"id\":\"OUT223\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P4\",\"name\":\"Jiaodian\",\"chName\":\"交点\",\"method\":\"Jiaodian\",\"inputs\":[{\"pid\":\"P4\",\"id\":\"INT441\",\"name\":\"特征一\",\"resourceId\":\"OUT222\",\"dataType\":3},{\"pid\":\"P4\",\"id\":\"INT442\",\"name\":\"特征二\",\"resourceId\":\"OUT332\",\"dataType\":3}],\"outputs\":[{\"pid\":\"P4\",\"id\":\"OUT441\",\"name\":\"交叉点\",\"dataType\":4}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P3\",\"name\":\"Zuobian\",\"chName\":\"左边\",\"method\":\"Zuobian\",\"inputs\":[{\"pid\":\"P3\",\"id\":\"INT333\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P3\",\"id\":\"OUT331\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P3\",\"id\":\"OUT332\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P3\",\"id\":\"OUT333\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]}]}");
+	//Json::Reader reader;
+	//Json::Value root; 
+	//reader.parse(doc, root, false);
+	//parseStream(root);
+ //
 
 	 
     system("pause");

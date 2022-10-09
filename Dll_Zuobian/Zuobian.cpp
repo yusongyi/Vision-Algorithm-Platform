@@ -146,7 +146,6 @@ int Zuobian(pcl::PointCloud<PointT>::Ptr cloud, NodeInput** inputs, NodeOutput**
 
 	pcl::ModelCoefficients::Ptr points(new pcl::ModelCoefficients);
  
-	points->values.resize(inliers->indices.size()*3);
 	for (int i = 0; i < inliers->indices.size(); ++i) {
 		c_plane->points.push_back(through_out3->points.at(inliers->indices[i]));
 		points->values.push_back(through_out3->points.at(inliers->indices[i]).x);
