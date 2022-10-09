@@ -20,13 +20,22 @@
 #include "web_sock_server.h"
 #include "Thread.h"
 #include "SmartTool.h"
-
+#include"topological_sort.h"
 
 using namespace pcl;
 using namespace std;
 
 //存储各个算法的地址
 map<string, RUN_FUN> mFuncPtr;
+
+//存储各个节点的地址
+map<string, AlgoNode*> algoNodeMap;
+
+//存储各个输入的地址
+map<string, NodeInput*> nodeInputMap;
+
+//存储各个输出的地址
+map<string, NodeOutput*> nodeOutputMap;
 
 typedef pcl::PointXYZ PointT;
 
@@ -49,6 +58,19 @@ RUN_FUN getFunction(string funcName)
 		return it->second;
 	return 0;
 }
+
+
+ AlgoNode*  sortNode(AlgoNode* algos, int size) { 
+	Graph_DG graph(algos, size);
+
+	graph.createGraph(); 
+	if (graph.topological_sort()) {
+		return graph.algos;
+	}
+	return NULL;
+	//graph.topological_sort_by_dfs();
+}
+
 
 void AlgoStream::loadConfig(Json::Value config) {
 	if (config["rootPath"].type() != Json::nullValue) { 
@@ -199,6 +221,12 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 		root["conditionNext"] = Json::Value(node.conditionNext);
 	}
 
+
+	for (int i = 0; i < node.outputSize; i++) {
+		NodeOutput output = *node.outputs[i];
+		root["ouputs"].append(output.toJson());
+	}
+
 	Json::FastWriter fw;
 	sendMsg(STREAM_DOING,fw.write(root));
 }
@@ -236,7 +264,7 @@ void AlgoStream::start(){
  
 		do { 
 			//调用函数fun1 
-			algos[i].runAddr(input, algos[i].out, algos[i].params);
+			algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
 
 			//生成Potree文件
 			genPotreeFiles(algos[i].out, *this, &algos[i]);
@@ -280,7 +308,7 @@ void AlgoStream::start(){
 			}
 
 			//下个节点的输入为本次的输出
-			input = algos[i].out;
+			//input = algos[i].out;
 		} while (algos[i].conditionNext); 
 	}
 	sendMsg(STREAM_END,uuid);
@@ -304,6 +332,23 @@ int AlgoStream::init(Json::Value doc) {
 	readPointCloud(fileNode.outPath, cloud);
 	input = cloud;
 
+
+	//初始化文件输入节点
+ 	fileNode.outputs = new NodeOutput*[1]();
+	NodeOutput *nodeOutput = new NodeOutput();
+	Json::Value defaultOut = doc[0]["outputs"][0];
+	nodeOutput->pid = fileNode.id;
+	nodeOutput->name = defaultOut["name"].asString();
+	nodeOutput->id = defaultOut["id"].asString();
+	nodeOutput->dataType = defaultOut["dataType"].asInt();
+	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
+	nodeOutput->coeff = coefficients;
+	
+	//文件输入节点存入map中，便于对应input的resource
+	nodeOutputMap.insert(make_pair(nodeOutput->id, nodeOutput));
+	fileNode.outputs[0] = nodeOutput;
+
+
 	//初始化算法模块前需要将第一个节点去掉 
 	doc.removeIndex(0,nullptr);
 	 
@@ -315,8 +360,8 @@ int AlgoStream::init(Json::Value doc) {
 	algos = new AlgoNode[siNum]();
 	for (int i = 0; i < siNum; i++)
 	{
-		Json::Value DevJson = doc[i];
-		std::string DevStr = DevJson["method"].asString();
+		Json::Value nodeJson = doc[i];
+		std::string DevStr = nodeJson["method"].asString();
 		cout << "开始初始化‘" << DevStr << "’算法模块" << endl;
 		 
 		 
@@ -327,36 +372,82 @@ int AlgoStream::init(Json::Value doc) {
 		{
 			//初始化算法节点
 			AlgoNode node;
-			node.id = DevJson["nodeId"].asString();
-			node.chName = DevJson["chName"].asString();
+			node.id = nodeJson["nodeId"].asString();
+			node.chName = nodeJson["chName"].asString();
 			node.name = DevStr.c_str();
 			node.runAddr = fptr;
+			
+
+			//输入初始化
+			Json::Value inputJson = nodeJson["inputs"];
+			int inputSize = inputJson.size();
+			node.inputs = new NodeInput*[inputSize]();
+			for (int j = 0; j < inputSize; j++) {
+
+				//构造输入节点
+				NodeInput *nodeInput = new NodeInput();
+
+				nodeInput->pid = node.id;
+				nodeInput->name = inputJson[j]["name"].asString();
+				nodeInput->id = inputJson[j]["id"].asString();
+				nodeInput->dataType = inputJson[j]["dataType"].asInt();
+				nodeInput->resourceId = inputJson[j]["resourceId"].asString();
+				nodeInput->pIdx = i;
+
+				//存入map中，便于对应output的target
+				nodeInputMap.insert(make_pair(nodeInput->id, nodeInput));
+				node.inputs[j] = nodeInput;
+			}
+			node.inputSize = inputSize;
+
+
+			//输出初始化
+			Json::Value outputJson = nodeJson["outputs"];
+			int outputSize = outputJson.size();
+			node.outputs = new NodeOutput*[outputSize]();
+			for (int k = 0; k < outputSize; k++) {
+
+				//构造输出节点
+				NodeOutput *nodeOutput = new NodeOutput();
+				nodeOutput->pid = node.id;
+				nodeOutput->name = outputJson[k]["name"].asString();
+				nodeOutput->id = outputJson[k]["id"].asString();
+				nodeOutput->dataType = outputJson[k]["dataType"].asInt();
+				nodeOutput->targetSize = 0;
+
+				//存入map中，便于对应input的resource
+				nodeOutputMap.insert(make_pair(nodeOutput->id, nodeOutput));
+				node.outputs[k] = nodeOutput;
+
+				 
+			}
+			node.outputSize = outputSize;
 
 			//参数初始化
-			if (DevJson["params"].type() != Json::nullValue) { 
-				int paramSize = DevJson["params"].size();
+			if (nodeJson["params"].type() != Json::nullValue) { 
+				int paramSize = nodeJson["params"].size();
 				float* params = new float[paramSize]();
 				for (int j = 0; j < paramSize; j++) {
-					params[j] = DevJson["params"][j].asFloat();
+					params[j] = nodeJson["params"][j].asFloat();
 				}
 				node.paramSize = paramSize;
 				node.params = params;
 			}
 
 			//分支条件初始化
-			if (DevJson["conditionType"].type() != Json::nullValue) {
-				node.conditionType = DevJson["conditionType"].asInt();
+			if (nodeJson["conditionType"].type() != Json::nullValue) {
+				node.conditionType = nodeJson["conditionType"].asInt();
 
-				if (DevJson["conditionParams"].type() == Json::nullValue) {
+				if (nodeJson["conditionParams"].type() == Json::nullValue) {
 					cout << DevStr << ":模块初始化失败" << endl;
 				}
 				else { 
-					int conditionParamSize = DevJson["conditionParams"].size();
+					int conditionParamSize = nodeJson["conditionParams"].size();
 					node.conditionParamSize = conditionParamSize;
 
 					float* conditionParams = new float[conditionParamSize]();
 					for (int k = 0; k < conditionParamSize; k++) {
-						conditionParams[k] = DevJson["conditionParams"][k].asFloat();
+						conditionParams[k] = nodeJson["conditionParams"][k].asFloat();
 					}
 					node.conditionParams = conditionParams;
 				}
@@ -365,7 +456,8 @@ int AlgoStream::init(Json::Value doc) {
 			else {
 				node.conditionType = -1;
 			}
-			algos[i] = node; 
+			algos[i] = node;
+			algoNodeMap.insert(make_pair(node.id, &node));
 			cout << DevStr << ":模块初始化成功" << endl;
 		}
 		else {
@@ -376,6 +468,37 @@ int AlgoStream::init(Json::Value doc) {
 		cout << "----------------" << endl;
 	}
 
+	//遍历输入节点，将数据来源关联其他输出节点
+	map<string, NodeInput*>::iterator inputIter;
+	for (inputIter = nodeInputMap.begin(); inputIter != nodeInputMap.end(); inputIter++)
+	{
+		NodeInput *input = inputIter->second;
+		string resourceId = input->resourceId;
+		NodeOutput *outPut = nodeOutputMap[resourceId];
+		outPut->targetSize++;
+
+		input->resource = outPut;
+	}
+
+	//遍历输出节点，初始化关联的输入节点数量
+	map<string, NodeOutput*>::iterator outputIter;
+	for (outputIter = nodeOutputMap.begin(); outputIter != nodeOutputMap.end(); outputIter++)
+	{
+		NodeOutput *output = outputIter->second; 
+		output->targets = new NodeInput[output->targetSize]();
+	 
+	}
+
+	//再遍历一遍输入节点，将输入节点放到数据源所在的输出节点末尾
+	for (inputIter = nodeInputMap.begin(); inputIter != nodeInputMap.end(); inputIter++)
+	{
+		NodeInput *input =inputIter->second;
+		string resourceId = input->resourceId;
+		NodeOutput *outPut = nodeOutputMap[resourceId];
+		outPut->targets[outPut->targetIdx++] = *input;
+	}
+
+	algos = sortNode(algos, siNum);
 	return 0;
 
 	

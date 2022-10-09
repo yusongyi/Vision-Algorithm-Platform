@@ -87,25 +87,36 @@
   <ItemGroup>
     <ClInclude Include="AlgoNode.h" />
     <ClInclude Include="AlgoStream.h" />
+    <ClInclude Include="NodeInput.h" />
+    <ClInclude Include="NodeOutput.h" />
     <ClInclude Include="SmartTool.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Thread.h" />
+    <ClInclude Include="topological_sort.h" />
     <ClInclude Include="web_sock_server.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlgoNode.cpp" />
     <ClCompile Include="AlgoStream.cpp" />
+    <ClCompile Include="NodeInput.cpp" />
+    <ClCompile Include="NodeOutput.cpp" />
     <ClCompile Include="SmartTool.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="topological_sort.cpp" />
     <ClCompile Include="v8test.cpp" />
     <ClCompile Include="web_sock_server.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties config_1json__JSONSchema="" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
