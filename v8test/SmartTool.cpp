@@ -136,25 +136,36 @@ std::string UTF8ToGBK(const std::string& strUTF8)
 }
 
 //œ‘ æ
-void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, PointCloud<PointXYZ>::Ptr &sor_cloud
-	//, PointCloud<PointXYZ>::Ptr &voxel, PointCloud<PointXYZ>::Ptr &uniform
-) {
+void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, NodeOutput** outputs, int outSize) {
 	visualization::PCLVisualizer::Ptr viewer(new visualization::PCLVisualizer("3d viewer"));
-	int v1(0), v2(0), v3(0), v4(0);
-	viewer->createViewPort(0.0, 0.0, 0.5, 1.0, v1);
-	viewer->addPointCloud(raw_point, "cloud1", v1);
+	for (int i = 0; i < outSize; i++) {
+		if (outputs[i]->coeff == NULL) {
+			continue;
+		}
+		int v = 0;
+		viewer->createViewPort(i/double(outSize), 0.0, (i+1) / double(outSize), 1.0, v);
+		if (outputs[i]->dataType == 1 || outputs[i]->dataType == 4) {
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>); 
+			for (int j = 0; j < outputs[i]->coeff->values.size(); j+=3)
+			{
+				pcl::PointXYZ point;
+				point.x = outputs[i]->coeff->values[j];
+				point.y = outputs[i]->coeff->values[j+1];
+				point.z = outputs[i]->coeff->values[j+2];
+				cloud->points.push_back(point);
+			}
 
-
-	viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
-	viewer->addPointCloud(sor_cloud, "cloud2", v2);
-
-
-	/*viewer->createViewPort(0.5, 0.0, 0.75, 1.0, v3);
-	viewer->addPointCloud(voxel, "cloud3", v3);
-
-	viewer->createViewPort(0.75, 0.0, 1, 1.0, v3);
-	viewer->addPointCloud(uniform, "cloud4", v3);*/
-
+			pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color1(cloud, 255, 0, 0);
+			viewer->addPointCloud(cloud, single_color1, "cloud"+i, v);
+		}
+		if (outputs[i]->dataType == 2) {
+			viewer->addPlane(*outputs[i]->coeff, "plan" + i, v);
+		}
+		if (outputs[i]->dataType == 3) {
+			viewer->addLine(*outputs[i]->coeff, "line" + i, v);
+		}
+	 
+	} 
 	viewer->spin();
 }
 

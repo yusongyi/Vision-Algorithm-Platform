@@ -27,26 +27,7 @@ public:
 	int paramSize;
 	float *params;
 
-
-
-	/*
-		-1: 没有分支
-		0: if 大于
-		1: if 小于
-		2: if 等于
-	*/
-	int conditionType = -1;
-	int conditionParamSize;
-	float *conditionParams;
-	int conditionCount = 0;
-	bool conditionNext = true;
-
-
-
-	pcl::PointCloud<PointT>::Ptr input;
-	pcl::PointCloud<PointT>::Ptr out;
-	string outPath;
-	string potreePath;
+	pcl::PointCloud<PointT>::Ptr input;  
 
 
 	int inputSize;

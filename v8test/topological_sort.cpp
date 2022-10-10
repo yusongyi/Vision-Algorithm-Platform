@@ -8,8 +8,7 @@ Graph_DG::Graph_DG(AlgoNode* algos, int size) {
 	for (int i = 0; i < size; i++) {
 		AlgoNode item = algos[i];
 		for (int j = 0; j < item.outputSize; j++) {
-
-			cout << item.outputs[j]->id << ":" << &item.outputs[j] << endl;
+			 
 			edge += item.outputs[j]->targetSize;
 		}
 	}

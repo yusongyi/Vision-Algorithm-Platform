@@ -36,9 +36,7 @@ std::string GBKToUTF8(const std::string& strGBK);
 std::string UTF8ToGBK(const std::string& strUTF8);
 
 //œ‘ æ
-void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, PointCloud<PointXYZ>::Ptr &sor_cloud
-	//, PointCloud<PointXYZ>::Ptr &voxel, PointCloud<PointXYZ>::Ptr &uniform
-);
+void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, NodeOutput** outputs, int outSize);
 
 static std::string readConfig(const char* path);
 
