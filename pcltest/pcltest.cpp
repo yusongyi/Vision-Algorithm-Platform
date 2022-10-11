@@ -247,7 +247,30 @@ int _tmain(int argc, _TCHAR* argv[])
 { 
 
 	 pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-     pcl::io::loadPCDFile ("table.pcd", *cloud);
+	  
+	 for (int i = 0; i < 1000; ++i) {
+
+		 for (int j = 0; j < 1000; ++j) {
+
+			 pcl::PointXYZ point;
+			 point.y = 00.1 * rand() / (RAND_MAX + 1.0f);
+
+			 point.x = i / 100.0+ point.y;
+			 point.z = j / 100.0+ point.y;
+
+			 point.y = 000.1 * rand() / (RAND_MAX + 1.0f);
+			
+			 cloud->points.push_back(point);
+		 }
+	 }
+
+
+	 cloud->width = 1000;
+
+	 cloud->height = 1000;
+	 //输出ply
+	 pcl::io::savePCDFileASCII("test100000.pcd", *cloud);
+
 	 //pcl::io::loadPLYFile ("E:\\CODE\\three.js\\examples\\models\\ply\\binary\\Lucy100k.ply", *cloud);
 	 std::cout << "original cloud size : " << cloud->size() << std::endl;
 	 PointCloud<PointXYZ>::Ptr through_out1(new PointCloud<PointXYZ>);
@@ -256,51 +279,42 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	 //滤波
 	 pcl::VoxelGrid<PointT> grid;
-	 const float leaf = 0.05f;
+	 const float leaf = 0.5f;
 	 grid.setLeafSize(leaf, leaf, leaf);
 	 grid.setInputCloud(cloud);
 	 pcl::PointCloud<PointT>::Ptr voxelResult(new pcl::PointCloud<PointT>);
 	 grid.filter(*voxelResult);
 
-	 //切掉上边
-	 float params[4] = { 1,-0.5,-0.1,1 };
-	 MyPassThrough(voxelResult, through_out1, params);
-
-	 //切掉左右
-	 float params2[4] = { 0,-0.5,0.3,1 };
-	 MyPassThrough(through_out1, through_out2, params2); 
-
+	// visualization_point(cloud, voxelResult);
 	  
 
 	 //找出边界
 	 pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normEst;
 	 pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-	 normEst.setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(through_out2));
-	 normEst.setRadiusSearch(0.1);
+	 normEst.setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(voxelResult));
+	 normEst.setRadiusSearch(4);
 	 normEst.compute(*normals);
 	 pcl::PointCloud<pcl::Boundary> boundaries;
 	 pcl::BoundaryEstimation<pcl::PointXYZ, pcl::Normal, pcl::Boundary> boundEst;
-	 boundEst.setInputCloud(through_out2);
+	 boundEst.setInputCloud(voxelResult);
 	 boundEst.setInputNormals(normals);
-	 boundEst.setRadiusSearch(0.1);
-	 boundEst.setAngleThreshold(M_PI*3/4);
+	 boundEst.setRadiusSearch(4);
+	 boundEst.setAngleThreshold(M_PI / 4);
 	 boundEst.setSearchMethod(pcl::search::KdTree<pcl::PointXYZ>::Ptr(new pcl::search::KdTree<pcl::PointXYZ>));
 	 boundEst.compute(boundaries);
 
 	 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_boundary(new pcl::PointCloud<pcl::PointXYZ>);
-	 for (int i = 0; i < through_out2->points.size(); i++)
+	 for (int i = 0; i < voxelResult->points.size(); i++)
 	 {
 
 		 if (boundaries[i].boundary_point > 0)
 		 {
-			 cloud_boundary->push_back(through_out2->points[i]);
+			 cloud_boundary->push_back(voxelResult->points[i]);
 		 }
 	 }
 
-	 //切掉右边
-	 float params3[4] = { 1,-0.5,0,1 };
-	 MyPassThrough(cloud_boundary, through_out3, params3);
- 
+	 visualization_point(voxelResult, cloud_boundary);
+	 
 	  
 
 	 //创建一个模型参数对象，用于记录结果
@@ -311,20 +325,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	 seg.setModelType(pcl::SACMODEL_LINE);  // Mandatory-设置目标几何形状
 	 seg.setMethodType(pcl::SAC_RANSAC);     //分割方法：随机采样法
 	 seg.setDistanceThreshold(0.01);         //设置误差容忍范围，也就是阈值
-	 seg.setInputCloud(through_out3);               //输入点云
+	 seg.setInputCloud(cloud_boundary);               //输入点云
 	 seg.segment(*inliers, *coefficients);   //分割点云，获得平面和法向量 
 
 	 /*子集提取*/
 	 // 直线点获取
 	 pcl::PointCloud<pcl::PointXYZ>::Ptr c_plane(new pcl::PointCloud<pcl::PointXYZ>);
 	 for (int i = 0; i < inliers->indices.size(); ++i) {
-		 c_plane->points.push_back(through_out3->points.at(inliers->indices[i]));
+		 c_plane->points.push_back(cloud_boundary->points.at(inliers->indices[i]));
 	 }
- 
-	 //coefficients->values[2] = 0;
+  
 	   
 	 visualization::PCLVisualizer::Ptr viewer(new visualization::PCLVisualizer("3d viewer"));
-	 viewer->addPointCloud(cloud_boundary);
+	// viewer->addPointCloud(cloud_boundary);
 
 	 pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color1(c_plane, 255, 0, 0);
 	 viewer->addPointCloud(c_plane, single_color1,"bondary",0);

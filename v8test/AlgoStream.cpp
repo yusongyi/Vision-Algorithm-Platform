@@ -206,14 +206,21 @@ void AlgoStream::start(){
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
 
-	//演示模式暂停
-	if (type == 2) {
-		mySleep(DEMO_SLEEP);
-	}
+	 
 
-	for(int i=0;i<size;i++){ 
-		algos[i].input = input; 
+	for(int i=0;i<size;i++){  
 
+		//节点开始
+		Json::Value root;
+		root["id"] = Json::Value(algos[i].id);  
+		Json::FastWriter fw;
+		sendMsg(NODE_START, fw.write(root));
+
+		//演示模式暂停
+		if (type == 2) {
+			mySleep(DEMO_SLEEP);
+		}
+		
 		//调用函数fun1 
 		algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
 		 
@@ -225,13 +232,8 @@ void AlgoStream::start(){
 			visualization_point(input, algos[i].outputs, algos[i].outputSize);
 		}
 
-		//演示模式暂停
-		if (type == 2) {
-			mySleep(DEMO_SLEEP);
-		}
-
-		//下个节点的输入为本次的输出
-		//input = algos[i].out;
+	
+ 
 	 
 	}
 	sendMsg(STREAM_END,uuid);
@@ -239,6 +241,19 @@ void AlgoStream::start(){
 
 
 int AlgoStream::init(Json::Value doc) {
+
+	//初始化算法模块 
+	for (int i = 0; i < doc.size(); i++)
+	{
+		Json::Value nodeJson = doc[i];
+		std::string DevStr = nodeJson["method"].asString();
+		if (DevStr.compare("FileInput") == 0) {
+			Json::Value t = doc[0];
+			doc[0] = nodeJson;
+			doc[i] = t;
+			break;
+		}
+	}
  
 	//默认第一个节点的第一个参数为数据文件地址
 	string dataPath = doc[0]["params"][0].asString();

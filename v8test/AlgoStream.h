@@ -9,8 +9,10 @@ enum StreamOpcode
 {
 	STREAM_START  = 1,
 	STREAM_DOING = 2,
-	STREAM_END    = 3,
-	STREAM_FAIL  = 9
+	STREAM_END    = 3, 
+	NODE_START = 4,
+	STREAM_FAIL  = 9,
+
 };
 
 class AlgoStream

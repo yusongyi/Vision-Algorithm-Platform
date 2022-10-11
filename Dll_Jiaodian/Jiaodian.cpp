@@ -34,8 +34,8 @@ int Jiaodian(pcl::PointCloud<PointT>::Ptr cloud, NodeInput** inputs, NodeOutput*
 	pcl::ModelCoefficients::Ptr points(new pcl::ModelCoefficients); 
 
 	points->values.push_back(0);
-	points->values.push_back(1);
-	points->values.push_back(2); 
+	points->values.push_back(0);
+	points->values.push_back(0); 
 
 	outputs[0]->coeff = points; 
 
