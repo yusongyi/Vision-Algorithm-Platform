@@ -230,10 +230,7 @@ void AlgoStream::start(){
 		//±¾»úÔ¤ÀÀ
 		if (type == 1) {
 			visualization_point(input, algos[i].outputs, algos[i].outputSize);
-		}
-
-	
- 
+		} 
 	 
 	}
 	sendMsg(STREAM_END,uuid);

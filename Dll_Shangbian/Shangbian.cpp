@@ -81,15 +81,15 @@ int Shangbian(pcl::PointCloud<PointT>::Ptr cloud, NodeInput** inputs, NodeOutput
 	pcl::ModelCoefficients::Ptr points(new pcl::ModelCoefficients);
 
 
-	for (int j = 0; j < 1000; ++j) {
+	for (int j = 0; j < 100; ++j) {
 
 		pcl::PointXYZ point;
-		point.y = 00.1 * rand() / (RAND_MAX + 1.0f);
+		point.y = 0.1 * rand() / (RAND_MAX + 1.0f);
 
-		point.z = point.y;
-		point.x = j / 100.0 + point.y;
+		point.z = 3+point.y;
+		point.x = 3+j / 10.0 + point.y;
 
-		point.y = 000.1 * rand() / (RAND_MAX + 1.0f);
+		point.y = 4 + 00.1 * rand() / (RAND_MAX + 1.0f);
 
 		;
 
@@ -100,12 +100,12 @@ int Shangbian(pcl::PointCloud<PointT>::Ptr cloud, NodeInput** inputs, NodeOutput
 	}
 
 	coefficients->values.push_back(-5);
-	coefficients->values.push_back(0);
-	coefficients->values.push_back(0);
+	coefficients->values.push_back(4);
+	coefficients->values.push_back(3);
 
 	coefficients->values.push_back(15);
-	coefficients->values.push_back(0);
-	coefficients->values.push_back(0);
+	coefficients->values.push_back(4);
+	coefficients->values.push_back(3);
 
 
 

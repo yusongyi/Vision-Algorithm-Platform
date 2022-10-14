@@ -248,26 +248,26 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	 pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
 	  
-	 for (int i = 0; i < 1000; ++i) {
+	 for (int i = 0; i < 100; ++i) {
 
-		 for (int j = 0; j < 1000; ++j) {
+		 for (int j = 0; j < 100; ++j) {
 
 			 pcl::PointXYZ point;
-			 point.y = 00.1 * rand() / (RAND_MAX + 1.0f);
+			 point.y = 0.1 * rand() / (RAND_MAX + 1.0f);
 
-			 point.x = i / 100.0+ point.y;
-			 point.z = j / 100.0+ point.y;
+			 point.x =3+ i / 10.0+ point.y;
+			 point.z = 3 + j / 10.0+ point.y;
 
-			 point.y = 000.1 * rand() / (RAND_MAX + 1.0f);
+			 point.y =4+ 00.1 * rand() / (RAND_MAX + 1.0f);
 			
 			 cloud->points.push_back(point);
 		 }
 	 }
 
 
-	 cloud->width = 1000;
+	 cloud->width = 100;
 
-	 cloud->height = 1000;
+	 cloud->height = 100;
 	 //Êä³öply
 	 pcl::io::savePCDFileASCII("test100000.pcd", *cloud);
 
