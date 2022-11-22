@@ -38,5 +38,9 @@ std::string UTF8ToGBK(const std::string& strUTF8);
 //œ‘ æ
 void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, NodeOutput** outputs, int outSize);
 
-static std::string readConfig(const char* path);
+ std::string readConfig(const char* path);
 
+ std::wstring string_to_wstring(const std::string &s);
+ std::string wstring_to_string(const std::wstring &s);
+ std::string ansi_to_utf8(const std::string &s);
+ std::string utf8_to_ansi(const std::string& s);

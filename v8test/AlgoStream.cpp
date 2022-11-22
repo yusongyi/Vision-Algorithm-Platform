@@ -166,7 +166,7 @@ void AlgoStream::sendMsg(StreamOpcode type,string msg) {
 	//向socket输出
 	if (clientWs != NULL) { 
 		cout << "sendMsg:" << fw.write(root) << endl;
-		WebSockServer::Instance().Send(clientWs, GBKToUTF8(fw.write(root)), WsOpcode::TEXT);
+		WebSockServer::Instance().Send(clientWs, ansi_to_utf8(fw.write(root)), WsOpcode::TEXT);
 	}
 }
 
@@ -374,9 +374,9 @@ int AlgoStream::init(Json::Value doc) {
 			cout << DevStr << ":模块初始化成功" << endl;
 		}
 		else {
-			sendMsg(STREAM_FAIL,DevStr+string(":模块初始化失败"));
+			sendMsg(STREAM_FAIL,DevStr+string(":NOT FOUND"));
 			cout << DevStr << ":模块初始化失败" << endl; 
-			//return -1;
+			return -1;
 		}
 		cout << "----------------" << endl;
 	}

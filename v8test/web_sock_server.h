@@ -13,8 +13,9 @@
 
 enum WsOpcode
 {
-	BINARY = 1,
-	TEXT,
+	BINARY = 2,
+	
+	TEXT= 1,
 	OTHER
 };
 
