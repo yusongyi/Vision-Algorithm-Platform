@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{2F1D5811-C5EF-4294-9E10-E86B84A04198}</ProjectGuid>
+    <ProjectGuid>{E6DF3B7F-3E55-40C1-AA0D-09250307E9F0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DllShangbian</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;DLLSTATISTICALOUTLIERREMOVAL_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>F:\C\vcpkg\installed\x86-windows\include\eigen3;F:\C\vcpkg\installed\x86-windows\include\boost;F:\C\vcpkg\installed\x86-windows\include\vtk-9.0;F:\C\vcpkg\installed\x86-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\C\vcpkg\installed\x86-windows\include\eigen3;F:\C\vcpkg\installed\x86-windows\include\boost;F:\C\vcpkg\installed\x86-windows\include\vtk-9.0;F:\C\vcpkg\installed\x86-windows\include;D:\OneDrive - yusongyi\dev\ylkj_server\v8test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,20 +158,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="NodeInput.h" />
-    <ClInclude Include="NodeOutput.h" />
+    <ClInclude Include="Point2Line.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Zuobian.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Point2Line.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Zuobian.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
