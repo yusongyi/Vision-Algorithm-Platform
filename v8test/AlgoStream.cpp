@@ -207,31 +207,37 @@ void AlgoStream::start(){
 	sendMsg(STREAM_START, fw.write(root));
 
 	 
+	try
+	{
+		for (int i = 0; i < size; i++) {
 
-	for(int i=0;i<size;i++){  
+			//节点开始
+			Json::Value root;
+			root["id"] = Json::Value(algos[i].id);
+			Json::FastWriter fw;
+			sendMsg(NODE_START, fw.write(root));
 
-		//节点开始
-		Json::Value root;
-		root["id"] = Json::Value(algos[i].id);  
-		Json::FastWriter fw;
-		sendMsg(NODE_START, fw.write(root));
+			//演示模式暂停
+			if (type == 2) {
+				mySleep(DEMO_SLEEP);
+			}
 
-		//演示模式暂停
-		if (type == 2) {
-			mySleep(DEMO_SLEEP);
+			//调用函数fun1 
+			algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
+
+			//输出本计算节点结果
+			sendNodeRes(algos[i]);
+
+			//本机预览
+			if (type == 1) {
+				visualization_point(input, algos[i].outputs, algos[i].outputSize);
+			}
+
 		}
-		
-		//调用函数fun1 
-		algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
-		 
-		//输出本计算节点结果
-		sendNodeRes(algos[i]);
-
-		//本机预览
-		if (type == 1) {
-			visualization_point(input, algos[i].outputs, algos[i].outputSize);
-		} 
-	 
+	}
+	catch (exception e) {
+		cout << e.what() << endl;
+		sendMsg(STREAM_FAIL, uuid); 
 	}
 	sendMsg(STREAM_END,uuid);
 }
