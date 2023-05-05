@@ -20,7 +20,9 @@
 #include "web_sock_server.h"
 #include "Thread.h"
 #include "SmartTool.h"
+#include "CloudQueue.h"
 #include"topological_sort.h"
+
 
 using namespace pcl;
 using namespace std;
@@ -47,6 +49,7 @@ static string CONVERT_TOOL_PATH = AlgoStream::ROOT_PATH + "potree\\PotreeConvert
 
 //演示模式的暂停秒数
 static int DEMO_SLEEP = 2;
+
 
 
 //根据名字获取函数
@@ -192,6 +195,35 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 	sendMsg(STREAM_DOING,fw.write(root));
 }
 
+/*
+
+发送点云数据
+	input: 点云数据
+
+*/
+void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud ) {
+	Json::Value root;
+	//printf(cloud->width)
+	//root["header"] = Json::Value(to_string(cloud->header));
+	root["width"] = Json::Value(cloud->width);
+	root["height"] = Json::Value(cloud->height);
+	root["is_dense"] = Json::Value(cloud->is_dense);
+	for (int i = 0; i < cloud->points.size(); i++) {
+		//Json::Value point;
+		PointT output = cloud->points[i];
+		//point["x"] = Json::Value(output.x);
+		//point["y"] = Json::Value(output.y);
+		//point["z"] = Json::Value(output.z);
+		root["ouputs"].append(output.x);
+		root["ouputs"].append(output.y);
+		root["ouputs"].append(output.z);
+	}
+	//root["sensor_origin"] = Json::Value(cloud->sensor_origin);
+	//root["sensor_orientation"] = Json::Value(cloud->sensor_orientation);
+	Json::FastWriter fw;
+	sendMsg(SEND_CLOUD, fw.write(root));
+}
+
 
 void AlgoStream::start(){
 
@@ -205,41 +237,48 @@ void AlgoStream::start(){
 	root["chName"] = Json::Value(fileNode.chName); 
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
-
-	 
-	try
-	{
-		for (int i = 0; i < size; i++) {
-
-			//节点开始
-			Json::Value root;
-			root["id"] = Json::Value(algos[i].id);
-			Json::FastWriter fw;
-			sendMsg(NODE_START, fw.write(root));
-
-			//演示模式暂停
-			if (type == 2) {
-				mySleep(DEMO_SLEEP);
-			}
-
-			//调用函数fun1 
-			algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
-
-			//输出本计算节点结果
-			sendNodeRes(algos[i]);
-
-			//本机预览
-			if (type == 1) {
-				visualization_point(input, algos[i].outputs, algos[i].outputSize);
-			}
-
+	while (cloudQueue.pointFlag) {
+		//判断是否为空
+		if (cloudQueue.QueueEmpty()) {
+			continue;
 		}
+		input = cloudQueue.DeQueue();
+		//发送点云数据
+		sendCloudData(input);
+		try
+		{
+			for (int i = 0; i < size; i++) {
+
+				//节点开始
+				Json::Value root;
+				root["id"] = Json::Value(algos[i].id);
+				Json::FastWriter fw;
+				sendMsg(NODE_START, fw.write(root));
+
+				//演示模式暂停
+				if (type == 2) {
+					mySleep(DEMO_SLEEP);
+				}
+
+				//调用函数fun1 
+				algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
+
+				//输出本计算节点结果
+				sendNodeRes(algos[i]);
+
+				//本机预览
+				if (type == 1) {
+					visualization_point(input, algos[i].outputs, algos[i].outputSize);
+				}
+
+			}
+		}
+		catch (exception e) {
+			cout << e.what() << endl;
+			sendMsg(STREAM_FAIL, uuid);
+		}
+		sendMsg(STREAM_END, uuid);
 	}
-	catch (exception e) {
-		cout << e.what() << endl;
-		sendMsg(STREAM_FAIL, uuid); 
-	}
-	sendMsg(STREAM_END,uuid);
 }
 
 

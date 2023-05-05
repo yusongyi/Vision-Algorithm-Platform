@@ -15,6 +15,7 @@
 #include <vector> 
 #include "web_sock_server.h"
 #include <boost/bind.hpp>
+#include "CloudQueue.h"
 using namespace std; 
  
 
@@ -37,7 +38,13 @@ void parseStream(Json::Value root) {
 	}
 
 	//异步执行
-	new boost::thread(&AlgoStream::start, &stream); 
+	new boost::thread(&AlgoStream::start, &stream);
+}
+
+void parseCloudQueue() {
+
+	//异步执行
+	new boost::thread(&CloudQueue::start, &cloudQueue);
 }
 
 
@@ -51,7 +58,8 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 	Json::Reader reader;
 	Json::Value root;
 
-
+	//开始生成点云数据}
+	cloudQueue.pointFlag = !cloudQueue.pointFlag;
 	//保存本次计算的uuid和客户端socket通道
 	stream.clientWs = pClient;
 
@@ -63,6 +71,8 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			printf("failed to parse!\n");
 			return;
 		}
+
+		parseCloudQueue();
 		parseStream(root);  
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
@@ -104,7 +114,6 @@ static std::string readConfig(const char* path) {
 
 int _tmain(int argc, _TCHAR* argv[])
 {
- 
 	string configStr = readConfig("config.json");
 	Json::Reader configReader;
 	Json::Value config;

@@ -11,13 +11,13 @@ enum StreamOpcode
 	STREAM_DOING = 2,
 	STREAM_END    = 3, 
 	NODE_START = 4,
+	SEND_CLOUD = 5,
 	STREAM_FAIL  = 9,
 
 };
 
 class AlgoStream
 {
-	
 	
 public: 
 	static  string ROOT_PATH;
@@ -36,6 +36,7 @@ public:
 	void start();
 	void sendNodeRes(AlgoNode node); 
 	void sendMsg(StreamOpcode type, string msg);
+	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud);
 
 	pcl::PointCloud<PointT>::Ptr input;
 };
