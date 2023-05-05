@@ -60,6 +60,7 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 
 	//开始生成点云数据}
 	cloudQueue.pointFlag = !cloudQueue.pointFlag;
+	stream.sendPoint = !stream.sendPoint;
 	//保存本次计算的uuid和客户端socket通道
 	stream.clientWs = pClient;
 

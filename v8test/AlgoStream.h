@@ -21,6 +21,7 @@ class AlgoStream
 	
 public: 
 	static  string ROOT_PATH;
+	bool sendPoint = false;
 	int type;
 	int size;
 	AlgoNode* algos; 

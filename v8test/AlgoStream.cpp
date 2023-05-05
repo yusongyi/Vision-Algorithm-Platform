@@ -237,7 +237,7 @@ void AlgoStream::start(){
 	root["chName"] = Json::Value(fileNode.chName); 
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
-	while (cloudQueue.pointFlag) {
+	while (AlgoStream::sendPoint) {
 		//ÅÐ¶ÏÊÇ·ñÎª¿Õ
 		if (cloudQueue.QueueEmpty()) {
 			continue;

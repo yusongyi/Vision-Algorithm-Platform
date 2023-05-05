@@ -53,7 +53,7 @@ int CloudQueue::QueueSize()
 //创建点云数据集
 void CloudQueue::start()
 {
-	while (cloudQueue.pointFlag) {
+	while (CloudQueue::pointFlag) {
 		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
 		for (int i = 0; i < 100; ++i) {
 			for (int j = 0; j < 100; ++j) {
@@ -73,7 +73,7 @@ void CloudQueue::start()
 			EnQueue(cloud);
 		}
 		catch (exception e) {
-			cloudQueue.pointFlag = false;
+			CloudQueue::pointFlag = false;
 		}
 		//再等1秒再生点云
 		Sleep(1000);
