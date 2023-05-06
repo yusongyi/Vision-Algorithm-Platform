@@ -22,6 +22,8 @@
 #include "SmartTool.h"
 #include "CloudQueue.h"
 #include"topological_sort.h"
+#include <cmath>
+#include<algorithm>
 
 
 using namespace pcl;
@@ -49,6 +51,8 @@ static string CONVERT_TOOL_PATH = AlgoStream::ROOT_PATH + "potree\\PotreeConvert
 
 //演示模式的暂停秒数
 static int DEMO_SLEEP = 2;
+
+
 
 
 
@@ -198,30 +202,52 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 /*
 
 发送点云数据
-	input: 点云数据
+input: 点云数据
 
 */
 void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud ) {
 	Json::Value root;
-	//printf(cloud->width)
-	//root["header"] = Json::Value(to_string(cloud->header));
 	root["width"] = Json::Value(cloud->width);
 	root["height"] = Json::Value(cloud->height);
 	root["is_dense"] = Json::Value(cloud->is_dense);
+
 	for (int i = 0; i < cloud->points.size(); i++) {
 		//Json::Value point;
 		PointT output = cloud->points[i];
-		//point["x"] = Json::Value(output.x);
-		//point["y"] = Json::Value(output.y);
-		//point["z"] = Json::Value(output.z);
 		root["ouputs"].append(output.x);
 		root["ouputs"].append(output.y);
 		root["ouputs"].append(output.z);
 	}
-	//root["sensor_origin"] = Json::Value(cloud->sensor_origin);
-	//root["sensor_orientation"] = Json::Value(cloud->sensor_orientation);
+
 	Json::FastWriter fw;
 	sendMsg(SEND_CLOUD, fw.write(root));
+}
+
+pcl::PointCloud<PointT>::Ptr AlgoStream::checkSize(pcl::PointCloud<PointT>::Ptr cloud)
+{
+	const int MAX_SIZE = 100000;
+	//控制点在10w以内
+	if (cloud->points.size() > MAX_SIZE) {
+		pcl::PointCloud<PointT>::Ptr cloudList(new pcl::PointCloud<PointT>);
+		int pointsList[MAX_SIZE];
+		int index = 0;
+		while (cloudList->points.size() < MAX_SIZE) {
+			//Json::Value point;
+			int x = rand() % (cloud->points.size() + 1);
+			int cout = std::count(begin(pointsList), end(pointsList), x);
+			if (cout != 0) {
+				continue;
+			}
+			PointT output = cloud->points[x];
+			cloudList->push_back(output);
+			pointsList[index] = x;
+			index = index + 1;
+		}
+		return cloudList;
+	}
+	else {
+		return cloud;
+	}
 }
 
 
@@ -242,7 +268,8 @@ void AlgoStream::start(){
 		if (cloudQueue.QueueEmpty()) {
 			continue;
 		}
-		input = cloudQueue.DeQueue();
+		//控制点的数量
+		input = checkSize(cloudQueue.DeQueue());
 		//发送点云数据
 		sendCloudData(input);
 		try

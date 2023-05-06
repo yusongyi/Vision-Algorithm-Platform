@@ -44,3 +44,4 @@ void visualization_point(PointCloud<PointXYZ>::Ptr &raw_point, NodeOutput** outp
  std::string wstring_to_string(const std::wstring &s);
  std::string ansi_to_utf8(const std::string &s);
  std::string utf8_to_ansi(const std::string& s);
+ 

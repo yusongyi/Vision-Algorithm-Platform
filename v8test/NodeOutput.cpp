@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "NodeOutput.h"
+#include "RangeImage.h"
+
+static RangeImage rangeImage;
 
 NodeOutput::NodeOutput(void)
 {
@@ -20,12 +23,32 @@ NodeOutput::~NodeOutput(void)
 	res["id"] = this->id;
 	res["name"] = this->name;
 	res["dataType"] = this->dataType;
-	if(this->coeff){
-		for (int i = 0; i < this->coeff->values.size(); i++) {
-
-			res["coeff"].append(this->coeff->values[i]);
-		} 
+	//判断是否深度图
+	if (this->dataType == 7) {
+		//处理成点云
+		if (this->coeff) {
+			pcl::PointCloud<PointT>::Ptr cloudP(new pcl::PointCloud<PointT>);
+			for (int i = 0; i < this->coeff->values.size(); i=i+3) {
+				PointT p;
+				p.x = this->coeff->values[i];
+				p.y = this->coeff->values[i+1];
+				p.z = this->coeff->values[i+2];
+				cloudP->push_back(p);
+			}
+			//点云转深度图
+			string imgBase64 = rangeImage.pointsToImage(cloudP);
+			res["coeff"].append(imgBase64);
+		}
 	}
+	else {
+		if (this->coeff) {
+			for (int i = 0; i < this->coeff->values.size(); i++) {
+
+				res["coeff"].append(this->coeff->values[i]);
+			}
+		}
+	}
+
 	return res;
 
 }
