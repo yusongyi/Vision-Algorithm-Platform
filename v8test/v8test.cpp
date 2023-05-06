@@ -58,9 +58,6 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 	Json::Reader reader;
 	Json::Value root;
 
-	//开始生成点云数据}
-	cloudQueue.pointFlag = !cloudQueue.pointFlag;
-	stream.sendPoint = !stream.sendPoint;
 	//保存本次计算的uuid和客户端socket通道
 	stream.clientWs = pClient;
 
@@ -72,11 +69,18 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			printf("failed to parse!\n");
 			return;
 		}
-
+		//获取控制是否生成点云及发送点云参数
+		bool isStart = root["isStart"].asBool();
+		//开始生成点云数据}
+		cloudQueue.pointFlag = isStart;
+		stream.sendPoint = isStart;
+		
 		parseCloudQueue();
 		parseStream(root);  
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
+		cloudQueue.pointFlag = false;
+		stream.sendPoint = false;
 		std::cout << e.what() << std::endl;
 		return ;
 	}
@@ -91,6 +95,9 @@ void on_open(void* pClient)
 void on_close(void* pClient, std::string msg)
 {
 	//pClient = nullptr;
+	//关闭生成与发送点云
+	cloudQueue.pointFlag = false;
+	stream.sendPoint = false;
 } 
 
 //读取

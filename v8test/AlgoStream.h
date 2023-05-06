@@ -38,6 +38,6 @@ public:
 	void sendNodeRes(AlgoNode node); 
 	void sendMsg(StreamOpcode type, string msg);
 	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud);
-
+	pcl::PointCloud<PointT>::Ptr checkSize(pcl::PointCloud<PointT>::Ptr cloud);
 	pcl::PointCloud<PointT>::Ptr input;
 };
