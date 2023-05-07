@@ -72,8 +72,8 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 		//获取控制是否生成点云及发送点云参数
 		bool isStart = root["isStart"].asBool();
 		//开始生成点云数据}
-		cloudQueue.pointFlag = isStart;
-		stream.sendPoint = isStart;
+		cloudQueue.running = isStart;
+		stream.running = isStart;
 		if (isStart) { 
 			parseCloudQueue();
 			parseStream(root);
@@ -81,8 +81,8 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 		 
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
-		cloudQueue.pointFlag = false;
-		stream.sendPoint = false;
+		cloudQueue.running = false;
+		stream.running = false;
 		std::cout << e.what() << std::endl;
 		return ;
 	}
@@ -97,8 +97,8 @@ void on_open(void* pClient)
 void on_close(void* pClient, std::string msg)
 { 
 	//关闭生成与发送点云
-	cloudQueue.pointFlag = false;
-	stream.sendPoint = false;
+	cloudQueue.running = false;
+	stream.running = false;
 } 
 
 //读取

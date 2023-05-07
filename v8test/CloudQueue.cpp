@@ -8,14 +8,12 @@ void CloudQueue::InitQueue()
 }
 
 bool CloudQueue::QueueFull()
-{
-	//TODO: 实现判断循环 队列是否为满的的代码。
+{ 
 	return (cloudQueue.Q.rear + 1) % MAXSIZE == cloudQueue.Q.front;//加一取模
 }
 
 bool CloudQueue::QueueEmpty()
-{
-	//TODO: 实现判断循环队列是否为空的的代码。
+{ 
 	return cloudQueue.Q.front == cloudQueue.Q.rear;//当队列为空时front 和rear相等
 }
 
@@ -25,8 +23,7 @@ void CloudQueue::EnQueue(CloudQueue::ElemType x)
 		//是否为空队列
 	{
 		return;
-	}
-	//TODO: 实现循环队列入队的代码
+	} 
 	cloudQueue.Q.rear = (cloudQueue.Q.rear + 1) % MAXSIZE;//尾部指针后移，如到最后转到头部
 	cloudQueue.Q.data[cloudQueue.Q.rear] = x;//插入队尾
 }
@@ -36,8 +33,7 @@ CloudQueue::ElemType CloudQueue::DeQueue()
 	if (QueueEmpty()) {
 		printf("队列已空! 出队失败!\n");
 		return{};
-	}
-	//TODO: 实现循环队列出队的代码
+	} 
 	cloudQueue.Q.front = (cloudQueue.Q.front + 1) % MAXSIZE;//队头指针后移，如到在最后转到头部
 	ElemType x = cloudQueue.Q.data[cloudQueue.Q.front];
 	return x;
@@ -50,10 +46,10 @@ int CloudQueue::QueueSize()
 }
 
 
-//创建点云数据集
+//创建随机点云数据集
 void CloudQueue::start()
 {
-	while (CloudQueue::pointFlag) {
+	while (CloudQueue::running) {
 		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
 		for (int i = 0; i < 100; ++i) {
 			for (int j = 0; j < 100; ++j) {
@@ -73,7 +69,7 @@ void CloudQueue::start()
 			EnQueue(cloud);
 		}
 		catch (exception e) {
-			CloudQueue::pointFlag = false;
+			CloudQueue::running = false;
 		}
 		//再等1秒再生点云
 		Sleep(1000);
