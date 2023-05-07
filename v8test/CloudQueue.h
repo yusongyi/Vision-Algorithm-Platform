@@ -1,5 +1,8 @@
 #pragma once
 #include "AlgoNode.h"
+#include <memory>
+#include <mutex>
+#include <condition_variable>
 
 class CloudQueue
 {
@@ -11,7 +14,8 @@ class CloudQueue
 		int front;//头指针
 		int rear;//尾指针，队列非空时，指向队尾元素下个位置
 	}SQueue;
-
+	std::condition_variable not_empty_cv_;
+	mutable std::mutex mutex_;
 public:
 	SQueue Q;
 	bool running = false;
