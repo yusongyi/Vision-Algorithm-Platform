@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include<cstdio>
+#include <stdio.h>
 #include<sys/timeb.h>
 #include <pcl/io/pcd_io.h> 
 #include <pcl/common/common_headers.h>
@@ -70,7 +71,8 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	f.read(buffer, size);                //将文件内容读入buffer
 	std::string imgBase64 = base64_encode(buffer, size);
 	std::cout << imgBase64 << "\n";
-
+	//关闭流
+	f.close();
 	//删除图片
 	const char *savePath = imageName.c_str();
 	remove(savePath);

@@ -223,6 +223,12 @@ void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud ) {
 	sendMsg(SEND_CLOUD, fw.write(root));
 }
 
+/*
+
+检验点云数量
+cloud: 点云数据
+
+*/
 pcl::PointCloud<PointT>::Ptr AlgoStream::checkSize(pcl::PointCloud<PointT>::Ptr cloud)
 {
 	const int MAX_SIZE = 100000;
@@ -231,6 +237,7 @@ pcl::PointCloud<PointT>::Ptr AlgoStream::checkSize(pcl::PointCloud<PointT>::Ptr 
 		pcl::PointCloud<PointT>::Ptr cloudList(new pcl::PointCloud<PointT>);
 		int pointsList[MAX_SIZE];
 		int index = 0;
+		//随机生成10w点云
 		while (cloudList->points.size() < MAX_SIZE) {
 			//Json::Value point;
 			int x = rand() % (cloud->points.size() + 1);
