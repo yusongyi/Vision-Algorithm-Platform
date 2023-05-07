@@ -74,9 +74,11 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 		//开始生成点云数据}
 		cloudQueue.pointFlag = isStart;
 		stream.sendPoint = isStart;
-		
-		parseCloudQueue();
-		parseStream(root);  
+		if (isStart) { 
+			parseCloudQueue();
+			parseStream(root);
+		}
+		 
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
 		cloudQueue.pointFlag = false;
@@ -93,8 +95,7 @@ void on_open(void* pClient)
 }
 
 void on_close(void* pClient, std::string msg)
-{
-	//pClient = nullptr;
+{ 
 	//关闭生成与发送点云
 	cloudQueue.pointFlag = false;
 	stream.sendPoint = false;
