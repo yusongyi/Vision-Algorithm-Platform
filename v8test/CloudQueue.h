@@ -14,7 +14,7 @@ class CloudQueue
 
 public:
 	SQueue Q;
-	bool pointFlag = false;
+	bool running = false;
 	void InitQueue();
 	bool QueueFull();
 	bool QueueEmpty();

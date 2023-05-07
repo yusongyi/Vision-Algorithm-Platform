@@ -29,15 +29,19 @@ public:
 	string name;
 
 	//数据类型
-	// POINT_CLOUD = 1,
-	// PLANE = 2,
-	// LINE = 3,
-	// POINT = 4
+	//点云 = 1,
+	// 面 = 2,
+	// 线 = 3,
+	// 点 = 4
+	//线段 = 5
+	//圆弧 = 6
+	//深度图 = 7
 	int dataType;
 
 	//关联的多个输入
 	NodeInput* targets;
 
+	//仅用于算法流程初始化
 	int targetSize;
 	int targetIdx;
 
