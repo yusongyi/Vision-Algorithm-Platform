@@ -9,11 +9,13 @@ void CloudQueue::InitQueue()
 
 bool CloudQueue::QueueFull()
 { 
+	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
 	return (cloudQueue.Q.rear + 1) % MAXSIZE == cloudQueue.Q.front;//加一取模
 }
 
 bool CloudQueue::QueueEmpty()
 { 
+	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
 	return cloudQueue.Q.front == cloudQueue.Q.rear;//当队列为空时front 和rear相等
 }
 
@@ -24,6 +26,7 @@ void CloudQueue::EnQueue(CloudQueue::ElemType x)
 	{
 		return;
 	} 
+	std::lock_guard<std::mutex> lk(cloudQueue.mutex_);
 	cloudQueue.Q.rear = (cloudQueue.Q.rear + 1) % MAXSIZE;//尾部指针后移，如到最后转到头部
 	cloudQueue.Q.data[cloudQueue.Q.rear] = x;//插入队尾
 }
@@ -34,6 +37,7 @@ CloudQueue::ElemType CloudQueue::DeQueue()
 		printf("队列已空! 出队失败!\n");
 		return{};
 	} 
+	std::lock_guard<std::mutex> lk(cloudQueue.mutex_);
 	cloudQueue.Q.front = (cloudQueue.Q.front + 1) % MAXSIZE;//队头指针后移，如到在最后转到头部
 	ElemType x = cloudQueue.Q.data[cloudQueue.Q.front];
 	return x;
@@ -42,6 +46,7 @@ CloudQueue::ElemType CloudQueue::DeQueue()
 //获取队列长度
 int CloudQueue::QueueSize()
 {
+	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
 	return cloudQueue.Q.rear >= cloudQueue.Q.front ? cloudQueue.Q.rear - cloudQueue.Q.front : cloudQueue.Q.rear - cloudQueue.Q.front + MAXSIZE;
 }
 
