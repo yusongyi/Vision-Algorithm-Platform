@@ -25,41 +25,23 @@ static const std::string base64_chars =
 
 string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 {
-	//以1度为角分辨率，从上面创建的点云创建深度图像。
-	//深度图像中的一个像素对应的角度大小1°，角度转弧度
-	float angularResolution = (float)(1.0f * (M_PI / 180.0f));
-	// 360.0度转弧度，扫描的水平宽度是360°
-	float maxAngleWidth = (float)(360.0f * (M_PI / 180.0f));
-	// 180.0度转弧度，扫描的垂直高度是180°
-	float maxAngleHeight = (float)(180.0f * (M_PI / 180.0f));
-	//采集位置，传感器的初始位姿
-	Eigen::Affine3f sensorPose = (Eigen::Affine3f)Eigen::Translation3f(0.0f, 0.0f, 0.0f);
 
-	//选择的系统 X轴是向右，Y轴向下，Z轴向前
-	//如果选择是LASER_FRAME,则X轴向前，Y轴向左，Z轴向上
-	pcl::RangeImage::CoordinateFrame coordinate_frame = pcl::RangeImage::CAMERA_FRAME;
+	clock_t start, end;
+	start = clock(); 
 
-	//noiseLevel如果设置为0.05就是5cm为半径的圆内的所有点的平均值，得到的深度值为准
-	float noiseLevel = 0.00;
-
-	//minRange大于0，假设为r，那么r内的所有点被忽略，为盲区
-	float minRange = 0.0f;
-	int borderSize = 1;
-
-	//-------------------生成深度图像------------------------
-	pcl::RangeImage::Ptr rangeImage_ptr(new pcl::RangeImage);
-	pcl::RangeImage& rangeImage = *rangeImage_ptr;
-	rangeImage.createFromPointCloud(*cloud, angularResolution, maxAngleWidth, maxAngleHeight, sensorPose, coordinate_frame, noiseLevel, minRange, borderSize);
-	//-------------------读取深度图像信息------------------------
-	std::cout << rangeImage << "\n";
+	cloud->width = 1000;
+	cloud->height = 1000;
 	//生成时间戳
 	long long timeA = systemtime();
 	string imageName = "RangeImage_"+ longtostring(timeA)+".png";
 	//-------------------深度图的保存------------------------
-	float* ranges = rangeImage.getRangesArray();
-	unsigned char* rgb_image = pcl::visualization::FloatImageUtils::getVisualImage(ranges, rangeImage.width, rangeImage.height);
-	pcl::io::saveRgbPNGFile(imageName, rgb_image, rangeImage.width, rangeImage.height);
 
+	pcl::io::savePNGFile(imageName, *cloud, "z");
+
+	end = clock();
+	cout << "image time1 = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
+
+	start = clock();
 	//-------------------转成base64------------------------
 	std::fstream f;
 	f.open(imageName, std::ios::in | std::ios::binary);
@@ -70,8 +52,8 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	f.seekg(0, std::ios_base::beg);     //设置偏移量至文件开头
 	f.read(buffer, size);                //将文件内容读入buffer
 	std::string imgBase64 = base64_encode(buffer, size);
-	std::cout << imgBase64 << "\n";
-
+	end = clock();
+	cout << "base64 time1 = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
 	//关闭流
 	f.close();
 	//删除图片

@@ -144,7 +144,7 @@ void AlgoStream::sendMsg(StreamOpcode type,string msg) {
 	Json::FastWriter fw;
 	//向socket输出
 	if (clientWs != NULL) { 
-		cout << "sendMsg:" << fw.write(root) << endl;
+		//cout << "sendMsg:" << fw.write(root) << endl;
 		WebSockServer::Instance().Send(clientWs, ansi_to_utf8(fw.write(root)), WsOpcode::TEXT);
 	}
 }
@@ -180,7 +180,8 @@ input: 点云数据
 void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud ) {
 
 	//控制点的数量
-	pcl::PointCloud<PointT>::Ptr res = checkSize(cloud);
+	//pcl::PointCloud<PointT>::Ptr res = checkSize(cloud);
+	pcl::PointCloud<PointT>::Ptr res = cloud;
 
 	Json::Value root;
 	root["width"] = Json::Value(res->width);
@@ -240,6 +241,7 @@ void AlgoStream::start(){
 	Json::FastWriter fw; 
 	sendMsg(STREAM_START, fw.write(root));
 
+	clock_t start, end;
 	//循环获取点云数据
 	while (AlgoStream::running) {
 
@@ -254,12 +256,19 @@ void AlgoStream::start(){
 		//获取队列中的点云数据
 		input = cloudQueue.DeQueue();
 
+		start = clock(); 
+
 		//发送点云数据
-		sendCloudData(input);
+		//sendCloudData(input);
+
+		end = clock();
+		cout << "cloud time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
+
 		try
 		{
 			//执行算法
 			for (int i = 0; i < size; i++) {
+				start = clock();
 
 				//节点开始
 				Json::Value root;
@@ -270,15 +279,19 @@ void AlgoStream::start(){
 				sendMsg(NODE_START, fw.write(root));
 
 				//演示模式暂停
-				if (type == 2) {
+				/*if (type == 2) {
 					mySleep(DEMO_SLEEP);
-				}
+				}*/
 
 				//调用函数fun1 
 				algos[i].runAddr(input, algos[i].inputs, algos[i].outputs, algos[i].params);
+				end = clock();
+				cout << "run time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
 
 				//向前端输出本计算节点结果
 				sendNodeRes(algos[i]); 
+				end = clock(); 
+				cout << "send time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
 
 			}
 		}

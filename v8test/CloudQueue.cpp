@@ -56,16 +56,16 @@ void CloudQueue::start()
 {
 	while (CloudQueue::running) {
 		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-		for (int i = 0; i < 100; ++i) {
-			for (int j = 0; j < 100; ++j) {
+		for (int i = 0; i < 1000; ++i) {
+			for (int j = 0; j < 1000; ++j) {
 				float y = 0.1 * rand() / (RAND_MAX + 1.0f);
 				float x = 3 + i / 10.0 + y;
 				float z = 3 + j / 10.0 + y;
-				y = 4 + 00.1 * rand() / (RAND_MAX + 1.0f);
+				y = 4 +  rand() / (RAND_MAX + 1.0f);
 				PointT p;
 				p.x = x;
-				p.y = y;
-				p.z = z;
+				p.y = z;
+				p.z = y;
 				cloud->push_back(p);
 			}
 		}
@@ -77,7 +77,7 @@ void CloudQueue::start()
 			CloudQueue::running = false;
 		}
 		//再等1秒再生点云
-		Sleep(1000);
+		Sleep(100);
 	}
 }
 
