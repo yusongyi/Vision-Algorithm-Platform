@@ -53,7 +53,7 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	std::cout << rangeImage << "\n";
 	//生成时间戳
 	long long timeA = systemtime();
-	string imageName = "RangeImage_"+ longtostring(timeA)+".png";
+	string imageName = "RangeImage_" + longtostring(timeA) + ".png";
 	//-------------------深度图的保存------------------------
 	float* ranges = rangeImage.getRangesArray();
 	unsigned char* rgb_image = pcl::visualization::FloatImageUtils::getVisualImage(ranges, rangeImage.width, rangeImage.height);
@@ -70,11 +70,12 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	f.read(buffer, size);                //将文件内容读入buffer
 	std::string imgBase64 = base64_encode(buffer, size);
 	std::cout << imgBase64 << "\n";
+	f.close();
 
 	//删除图片
 	const char *savePath = imageName.c_str();
-	remove(savePath);
-	return "data:image/jpeg;base64,"+imgBase64;
+	int res = remove(savePath);
+	return "data:image/jpeg;base64," + imgBase64;
 }
 
 //图片转base64
