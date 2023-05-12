@@ -44,6 +44,7 @@ public:
 	data 为要发送的数据
 	*/
 	bool Send(void* pClient, const std::string data, WsOpcode opcode = WsOpcode::BINARY);
+	bool Send(void* pClient, const void* data, int size, WsOpcode opcode);
 	void Close(void* pClient);
 	void CloseAll();
 private:

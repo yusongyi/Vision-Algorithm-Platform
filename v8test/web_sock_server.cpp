@@ -92,7 +92,36 @@ WebSockServer& WebSockServer::Instance()
 	static WebSockServer instance;
 	return instance;
 }
+bool WebSockServer::Send(void* pClient, const void* data,int size, WsOpcode opcode)
+{
+	//读锁
+	ReadLock readLock(rwMutext);
+	//先在本地查找对应的客户端对象
+	const ClientMap::iterator it = g_mapClient.find(pClient);
 
+	if (it == g_mapClient.end())
+	{
+		return false;
+	}
+
+	websocketpp::connection_hdl hdl = it->second;
+	std::error_code ec;
+
+	websocketpp::frame::opcode::value sCode = websocketpp::frame::opcode::BINARY;
+
+	g_server.send(hdl, data, size, sCode, ec);//发送二进制数据
+
+	//检查错误信息
+	if (ec.value() == 0)
+	{
+		return true;
+	}
+	else
+	{
+		std::cout << "> Error sending message: " << ec.message() << std::endl;
+		return false;
+	}
+}
 bool WebSockServer::Send(void* pClient, const std::string data, WsOpcode opcode)
 {
 	//读锁

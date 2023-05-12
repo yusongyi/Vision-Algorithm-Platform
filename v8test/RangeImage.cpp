@@ -29,7 +29,7 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	clock_t start, end;
 	start = clock(); 
 
-	cloud->width = 1000;
+	cloud->width = cloud->points.size()/1000;
 	cloud->height = 1000;
 	//生成时间戳
 	long long timeA = systemtime();
@@ -59,6 +59,7 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	//删除图片
 	const char *savePath = imageName.c_str();
 	remove(savePath);
+	//return "data:image/jpeg;base64,";
 	return "data:image/jpeg;base64,"+imgBase64;
 }
 

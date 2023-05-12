@@ -55,6 +55,9 @@ public:
 	//本次运行的ID
 	string uuid;
 
+	//发送点云的ID
+	int cloudId;
+
 	//加载系统配置
 	void loadConfig(Json::Value config);
 
@@ -74,7 +77,7 @@ public:
 	void sendMsg(StreamOpcode type, string msg);
 
 	//发送输入点云数据
-	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud);
+	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId);
 
 	//控制点的数量
 	pcl::PointCloud<PointT>::Ptr checkSize(pcl::PointCloud<PointT>::Ptr cloud);

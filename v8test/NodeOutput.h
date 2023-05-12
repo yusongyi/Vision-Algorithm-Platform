@@ -9,6 +9,8 @@
 #include "json/json.h"
 using namespace std;
  
+//定义点云类型
+typedef pcl::PointXYZ PointT;
 
 class NodeInput;
 
@@ -69,6 +71,7 @@ public:
  
 	**/
 	pcl::ModelCoefficients::Ptr coeff ;
+	pcl::PointCloud<PointT>::Ptr pointCloudList;
 
 };
 

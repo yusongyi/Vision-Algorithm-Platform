@@ -22,6 +22,7 @@ using namespace std;
 
 static AlgoStream stream;
 void* pClient = nullptr;
+int g_Flag = 0;
 
 
 void parseStream(Json::Value root) {
@@ -91,7 +92,11 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 
 void on_open(void* pClient)
 {
+
 	::pClient = pClient;
+
+	
+
 }
 
 void on_close(void* pClient, std::string msg)
@@ -123,6 +128,38 @@ static std::string readConfig(const char* path) {
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	//pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+	//for (int j = 0; j < 1000; ++j) {
+	//	float y = 0.1 * rand() / (RAND_MAX + 1.0f);
+	//	float x = 3 + 0 / 10.0 + y;
+	//	float z = 3 + j / 10.0 + y;
+	//	y = 4 + rand() / (RAND_MAX + 1.0f);
+	//	PointT p;
+	//	p.x = x;
+	//	p.y = z;
+	//	p.z = y;
+	//	cloud->push_back(p);
+	//}
+	//float * p = (float *)cloud->points.data();
+	//cout << cloud->points.size() << endl;
+
+	////--------------第一个点云----------------------
+	//cout << fixed << * p << endl;
+	//cout << fixed << *(p+1) << endl;
+	//cout << fixed << *(p+2) << endl;
+	//cout << fixed << *(p+3) << endl;//无用，忽略
+	//cout << (cloud->points.data() + 0)->x << endl;
+	//cout << (cloud->points.data() + 0)->y << endl;
+	//cout << (cloud->points.data() + 0)->z << endl;
+
+	////---------------第二个点云---------------------
+	//cout << fixed << *(p+4) << endl;
+	//cout << (cloud->points.data() + 1)->x << endl;
+
+	//return 0;
+
+
+	/////////////////////////////
 	string configStr = readConfig("config.json");
 	Json::Reader configReader;
 	Json::Value config;
@@ -133,17 +170,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		return -1;
 	} 
 	stream.loadConfig(config);
-
+	
 	stream.loadDll();
-
-
+	
+	
 	WebSockServer::Instance().Init(9002,
 		boost::bind(on_open, _1),
 		boost::bind(on_close, _1, _2),
 		boost::bind(on_message, _1, _2, _3)
 	);
 	WebSockServer::Instance().StartServer();
-
+	
 	std::string str;
 	while (std::cin >> str)
 	{
@@ -159,15 +196,15 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 		}
 	} 
-
-
+	
+	
 	/*cout << "开始解析脚本" << endl;
 	string doc("{\"type\":1,\"uuid\":\"1b8459b2-0297-4029-9f5b-bec5d2a6c27f\",\"doc\":[{\"nodeId\":\"P1\",\"method\":\"FileInput\",\"name\":\"FileInput\",\"chName\":\"输入点云\",\"inputs\":[],\"outputs\":[{\"pid\":\"P1\",\"id\":\"OUT111\",\"name\":\"上\",\"dataType\":1}],\"params\":[\"table.ply\"]},{\"nodeId\":\"P2\",\"name\":\"Shangbian\",\"chName\":\"上边\",\"method\":\"Shangbian\",\"inputs\":[{\"pid\":\"P2\",\"id\":\"INT222\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P2\",\"id\":\"OUT221\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P2\",\"id\":\"OUT222\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P2\",\"id\":\"OUT223\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P4\",\"name\":\"Jiaodian\",\"chName\":\"交点\",\"method\":\"Jiaodian\",\"inputs\":[{\"pid\":\"P4\",\"id\":\"INT441\",\"name\":\"特征一\",\"resourceId\":\"OUT222\",\"dataType\":3},{\"pid\":\"P4\",\"id\":\"INT442\",\"name\":\"特征二\",\"resourceId\":\"OUT332\",\"dataType\":3}],\"outputs\":[{\"pid\":\"P4\",\"id\":\"OUT441\",\"name\":\"交叉点\",\"dataType\":4}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P3\",\"name\":\"Zuobian\",\"chName\":\"左边\",\"method\":\"Zuobian\",\"inputs\":[{\"pid\":\"P3\",\"id\":\"INT333\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P3\",\"id\":\"OUT331\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P3\",\"id\":\"OUT332\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P3\",\"id\":\"OUT333\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]}]}");
 	Json::Reader reader;
 	Json::Value root; 
 	reader.parse(doc, root, false);
 	parseStream(root);*/
-
+	
 	 
     system("pause");
     return 0;

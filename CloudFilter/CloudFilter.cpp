@@ -32,14 +32,7 @@ int CloudFilter(pcl::PointCloud<PointT>::Ptr cloud, NodeInput** inputs, NodeOutp
  
 
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-	  
-	for (int i = 0; i < cloud->size(); i++) {
-		coefficients->values.push_back(cloud->points[i].x);
-		coefficients->values.push_back(cloud->points[i].y);
-		coefficients->values.push_back(cloud->points[i].z);
-	}
-
-	outputs[0]->coeff = coefficients;
+	outputs[0]->pointCloudList = cloud;
 
 	return 0;
 }
