@@ -12,6 +12,7 @@ public:
 	typedef struct {
 		int cloudId;//点云Id
 		ElemType cloudList;//点云数据
+		int index;//循环次数
 	} CloudObj;
 
 	//**********循环队列开始**********

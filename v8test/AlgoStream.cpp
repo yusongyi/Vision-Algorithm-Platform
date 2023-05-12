@@ -191,32 +191,12 @@ input: 点云数据
 
 */
 void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId) {
-
-	//控制点的数量
-	//pcl::PointCloud<PointT>::Ptr res = checkSize(cloud);
-	//pcl::PointCloud<PointT>::Ptr res = cloud;
-	//Json::Value root;
-	//root["width"] = Json::Value(res->width);
-	//root["height"] = Json::Value(res->height);
-	//root["is_dense"] = Json::Value(res->is_dense);
-	//root["cloudId"] = Json::Value(cloudId);
-	//cout << "getclouudIdx = " << cloudId << endl;
-	//for (int i = 0; i < res->points.size(); i++) {
-	//	//Json::Value point;
-	//	PointT output = res->points[i];
-	//	root["ouputs"].append(output.x);
-	//	root["ouputs"].append(output.y);
-	//	root["ouputs"].append(output.z);
-	//}
-	//
-	//Json::FastWriter fw;
-	//sendMsg(SEND_CLOUD, fw.write(root));
-	//PointT start;
-	//start.x = cloudId;
-	//start.y = cloudId;
-	//start.z = cloudId;
-	//cloud->push_back(start);
-	//cloud->insert(cloud->begin() + 0, start);
+	//设置点云Id
+	PointT start;
+	start.x = cloudId;
+	start.y = cloudId;
+	start.z = cloudId;
+	cloud->insert(cloud->begin() + 0, start);
 	float * p = (float *)cloud->points.data();
 	WebSockServer::Instance().Send(clientWs, (void *)p, cloud->points.size()*4*4, WsOpcode::BINARY);
 }
@@ -274,7 +254,7 @@ void AlgoStream::start(){
 	clock_t start, end;
 	int cloudId = 0;
 	pcl::PointCloud<PointT>::Ptr pointCloudList(new pcl::PointCloud<PointT>);
-
+	pointCloudList->points.resize(1000000);
 	//循环获取点云数据
 	while (AlgoStream::running) {
 
@@ -290,10 +270,14 @@ void AlgoStream::start(){
 		CloudQueue::CloudObj cloudObj = cloudQueue.DeQueue();
 		//获取点云
 		input = cloudObj.cloudList;
+		//稀疏点云
+		//pcl::PointCloud<PointT>::Ptr res = checkSize(input);
 		//获取ID
 		int gcloudId = cloudObj.cloudId;
+
 		//合并追加点云
-		*pointCloudList = (*pointCloudList) + (*input);
+		*pointCloudList += (*input);
+
 
 		start = clock(); 
 

@@ -59,7 +59,6 @@ string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
 	//É¾³ýÍ¼Æ¬
 	const char *savePath = imageName.c_str();
 	remove(savePath);
-	//return "data:image/jpeg;base64,";
 	return "data:image/jpeg;base64,"+imgBase64;
 }
 

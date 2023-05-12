@@ -61,11 +61,8 @@ void CloudQueue::start()
 	int cloudId = 0;
 	while (CloudQueue::running) {
 		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-		//PointT start;
-		//start.x = cloudId;
-		//start.y = cloudId;
-		//start.z = cloudId;
-		//cloud->push_back(start);
+		cloud->points.resize(1000);
+		cout << "cloudSize = " << cloud->points.size() << endl;
 		//for (int i = 0; i < 1000; ++i) {
 			for (int j = 0; j < 1000; ++j) {
 				float y = 0.1 * rand() / (RAND_MAX + 1.0f);
@@ -76,12 +73,13 @@ void CloudQueue::start()
 				p.x = x;
 				p.y = z;
 				p.z = y;
-				cloud->push_back(p);
+				cloud->points[j] = p;
+				//cloud->push_back(p);
 			}
 		//}
 		try {
 			//给结构体赋值
-			CloudQueue::CloudObj cloudObj = { cloudId, cloud };
+			CloudQueue::CloudObj cloudObj = { cloudId, cloud, index};
 			//添加到队列
 			EnQueue(cloudObj);
 		}
