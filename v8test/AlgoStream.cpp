@@ -254,7 +254,7 @@ void AlgoStream::start(){
 	clock_t start, end;
 	int cloudId = 0;
 	pcl::PointCloud<PointT>::Ptr pointCloudList(new pcl::PointCloud<PointT>);
-	pointCloudList->points.resize(1000000);
+	pointCloudList->points.resize(10000);
 	//循环获取点云数据
 	while (AlgoStream::running) {
 
@@ -269,23 +269,16 @@ void AlgoStream::start(){
 		//获取队列中的点云数据
 		CloudQueue::CloudObj cloudObj = cloudQueue.DeQueue();
 		//获取点云
-		input = cloudObj.cloudList;
-		//稀疏点云
-		//pcl::PointCloud<PointT>::Ptr res = checkSize(input);
+		input = cloudObj.cloudList; 
 		//获取ID
 		int gcloudId = cloudObj.cloudId;
 
 		//合并追加点云
-		*pointCloudList += (*input);
-
-
-		start = clock(); 
+		*pointCloudList += (*input); 
 
 		//发送点云数据
 		sendCloudData(input, gcloudId);
-
-		end = clock();
-		cout << "cloud time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
+		 
 
 		if (gcloudId != cloudId) {
 			cloudId = gcloudId;
@@ -303,10 +296,6 @@ void AlgoStream::start(){
 					//通知前端，此算法节点开始执行
 					sendMsg(NODE_START, fw.write(root));
 
-					//演示模式暂停
-					/*if (type == 2) {
-						mySleep(DEMO_SLEEP);
-					}*/
 
 					//调用函数fun1 
 					algos[i].runAddr(pointCloudList, algos[i].inputs, algos[i].outputs, algos[i].params);
@@ -317,18 +306,20 @@ void AlgoStream::start(){
 					sendNodeRes(algos[i]);
 					end = clock();
 					cout << "send time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
+					 
 
 				}
 				//清空上一次点云数据释放内存
  				pcl::PointCloud<PointT>::Ptr newPointCloudList(new pcl::PointCloud<PointT>);
 				//pointCloudList.reset();
 				*pointCloudList = *newPointCloudList;
+
 			}
 			catch (exception e) {
 				cout << e.what() << endl;
 				sendMsg(STREAM_FAIL, uuid);
 			}
-
+ 
 			//发送消息，本算法完成一次
 			sendMsg(STREAM_END, uuid);
 		}

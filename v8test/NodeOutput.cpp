@@ -27,14 +27,7 @@ NodeOutput::~NodeOutput(void)
 	if (this->dataType == 7) {
 		//处理成点云
 		if (this->pointCloudList) {
-			//pcl::PointCloud<PointT>::Ptr cloudP(new pcl::PointCloud<PointT>);
-			//for (int i = 1; i < this->coeff->values.size(); i=i+3) {
-			//	PointT p;
-			//	p.x = this->coeff->values[i];
-			//	p.y = this->coeff->values[i+1];
-			//	p.z = this->coeff->values[i+2];
-			//	cloudP->push_back(p);
-			//}
+			 
 			//点云转深度图
 			string imgBase64 = rangeImage.pointsToImage(this->pointCloudList);
 			res["coeff"].append(imgBase64);

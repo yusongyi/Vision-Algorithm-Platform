@@ -61,22 +61,18 @@ void CloudQueue::start()
 	int cloudId = 0;
 	while (CloudQueue::running) {
 		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-		cloud->points.resize(1000);
-		cout << "cloudSize = " << cloud->points.size() << endl;
-		//for (int i = 0; i < 1000; ++i) {
-			for (int j = 0; j < 1000; ++j) {
+		cloud->points.resize(100);  
+			for (int j = 0; j < 100; ++j) {
 				float y = 0.1 * rand() / (RAND_MAX + 1.0f);
 				float x = 3 + index / 10.0 + y;
 				float z = 3 + j / 10.0 + y;
-				y = 4 +  rand() / (RAND_MAX + 1.0f);
+				y = 3 +  rand() / (RAND_MAX + 1.0f);
 				PointT p;
 				p.x = x;
-				p.y = z;
-				p.z = y;
-				cloud->points[j] = p;
-				//cloud->push_back(p);
-			}
-		//}
+				p.y = y;
+				p.z = z;
+				cloud->points[j] = p; 
+			} 
 		try {
 			//给结构体赋值
 			CloudQueue::CloudObj cloudObj = { cloudId, cloud, index};
@@ -89,7 +85,7 @@ void CloudQueue::start()
 		//再等1秒再生点云
 		//Sleep(100);
 		++index;
-		if (index == 1000) {
+		if (index == 100) {
 			std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
 			++cloudId;
 			cout << "setclouudId = " << cloudId << endl;

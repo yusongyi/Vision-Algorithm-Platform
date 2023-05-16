@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\work\demo\vcpkg\installed\x86-windows\include\eigen3;E:\work\demo\vcpkg\vcpkg\installed\x86-windows\include\boost;E:\work\demo\vcpkg\installed\x86-windows\include;E:\work\demo\vcpkg\installed\x86-windows\include\vtk-9.0;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\work\demo\vcpkg\installed\x86-windows\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\CODE\vcpkg\installed\x86-windows\include\eigen3;E:\CODE\vcpkg\vcpkg\installed\x86-windows\include\boost;E:\CODE\vcpkg\installed\x86-windows\include;E:\CODE\vcpkg\installed\x86-windows\include\vtk-9.0;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\CODE\vcpkg\installed\x86-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -93,13 +93,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;DLLSTATISTICALOUTLIERREMOVAL_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>E:\work\demo\vcpkg\installed\x86-windows\include\vtk-9.0;E:\work\demo\vcpkg\installed\x86-windows\include;E:\work\demo\vcpkg\installed\x86-windows\include\boost;E:\work\demo\vcpkg\installed\x86-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\CODE\vcpkg\installed\x86-windows\include\vtk-9.0;E:\CODE\vcpkg\installed\x86-windows\include;E:\CODE\vcpkg\installed\x86-windows\include\boost;E:\CODE\vcpkg\installed\x86-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>E:\work\demo\vcpkg\installed\x86-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\CODE\vcpkg\installed\x86-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
