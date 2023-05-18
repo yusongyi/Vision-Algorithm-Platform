@@ -92,7 +92,7 @@ WebSockServer& WebSockServer::Instance()
 	static WebSockServer instance;
 	return instance;
 }
-bool WebSockServer::Send(void* pClient, const void* data,int size, WsOpcode opcode)
+bool WebSockServer::Send(void* pClient, const void* data,int size)
 {
 	//读锁
 	ReadLock readLock(rwMutext);
@@ -105,12 +105,9 @@ bool WebSockServer::Send(void* pClient, const void* data,int size, WsOpcode opco
 	}
 
 	websocketpp::connection_hdl hdl = it->second;
-	std::error_code ec;
-
-	websocketpp::frame::opcode::value sCode = websocketpp::frame::opcode::BINARY;
-
-	g_server.send(hdl, data, size, sCode, ec);//发送二进制数据
-
+	std::error_code ec; 
+	g_server.send(hdl, data, size, websocketpp::frame::opcode::BINARY, ec);//发送二进制数据
+ 
 	//检查错误信息
 	if (ec.value() == 0)
 	{
@@ -122,39 +119,15 @@ bool WebSockServer::Send(void* pClient, const void* data,int size, WsOpcode opco
 		return false;
 	}
 }
-bool WebSockServer::Send(void* pClient, const std::string data, WsOpcode opcode)
+bool WebSockServer::Send(void* pClient, const std::string data)
 {
-	//读锁
-	ReadLock readLock(rwMutext);
-	//先在本地查找对应的客户端对象
-	const ClientMap::iterator it = g_mapClient.find(pClient);
-
-	if (it == g_mapClient.end())
-	{
-		return false;
-	}
-
-	websocketpp::connection_hdl hdl = it->second;
-	std::error_code ec;
-
-	websocketpp::frame::opcode::value sCode = websocketpp::frame::opcode::BINARY;
-
-	if (opcode == TEXT)
-	{
-		sCode = websocketpp::frame::opcode::TEXT;
-	}
-	g_server.send(hdl, data.c_str(), data.size(), sCode, ec);//发送二进制数据
-
-	//检查错误信息
-	if (ec.value() == 0)
-	{
-		return true;
-	}
-	else
-	{
-		std::cout << "> Error sending message: " << ec.message() << std::endl;
-		return false;
-	}
+	char *dataBuffer = new char[data.size() + 1];
+	memcpy(dataBuffer, "1", 1);
+	memcpy(dataBuffer + 1, data.c_str(), data.size()); 
+	bool res = Send(pClient, dataBuffer, data.size() + 1);
+	delete[] dataBuffer;
+	return res;
+	 
 }
 
 void WebSockServer::Close(void* pClient)
@@ -200,9 +173,9 @@ bool WebSockServer::Init(uint16_t uPort, OnOpenFun openFun, OnCloseFun closeFun,
 
 	try {
 		// Set logging settings
-		g_server.set_access_channels(websocketpp::log::alevel::none);
-		g_server.clear_access_channels(websocketpp::log::alevel::none);
-
+		g_server.set_access_channels(websocketpp::log::alevel::all);
+		g_server.clear_access_channels(websocketpp::log::alevel::all ^ websocketpp::log::alevel::frame_payload);
+		 
 		// Initialize Asio
 		if (pOiService == nullptr)
 		{

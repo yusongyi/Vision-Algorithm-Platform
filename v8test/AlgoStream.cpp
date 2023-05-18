@@ -36,11 +36,13 @@
 #include <pcl/filters/filter.h>//
 #include <pcl/registration/icp.h>//icp配准
 #include  <pcl/registration/gicp.h>
+#include "RangeImage.h"
 
 
 using namespace pcl;
 using namespace std;
 
+static RangeImage rangeImage;
 //存储各个算法的地址
 map<string, RUN_FUN> mFuncPtr;
 
@@ -158,7 +160,7 @@ void AlgoStream::sendMsg(StreamOpcode type,string msg) {
 	//向socket输出
 	if (clientWs != NULL) { 
 		//cout << "sendMsg:" << fw.write(root) << endl;
-		WebSockServer::Instance().Send(clientWs, ansi_to_utf8(fw.write(root)), WsOpcode::TEXT);
+		WebSockServer::Instance().Send(clientWs, ansi_to_utf8(fw.write(root)));
 	}
 }
 
@@ -177,7 +179,31 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
  
 	for (int i = 0; i < node.outputSize; i++) {
 		NodeOutput output = *node.outputs[i];
-		root["ouputs"].append(output.toJson());
+	
+		if (output.dataType == 7) {
+			//处理成点云
+			if (output.pointCloudList) {
+
+				//点云转深度图
+				unsigned char *  res = rangeImage.pointsToImage(output.pointCloudList);
+				int size = rangeImage.getImgSize(output.pointCloudList);
+				 
+
+				char *dataBuffer = new char[size + 1+ output.pid.size()];
+				memcpy(dataBuffer, "2", 1); 
+				memcpy(dataBuffer+1, output.pid.c_str(), output.pid.size());
+				memcpy(dataBuffer + 1+ output.pid.size(), res, size);
+
+
+				WebSockServer::Instance().Send(clientWs, dataBuffer, size + 1 + output.pid.size());
+				delete[] dataBuffer;
+				delete[] res;
+			}
+		}
+		else {
+			root["ouputs"].append(output.toJson());
+		}
+		
 	}
 
 	Json::FastWriter fw;
@@ -190,56 +216,17 @@ void AlgoStream::sendNodeRes(AlgoNode node) {
 input: 点云数据
 
 */
-void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId) {
-	//设置点云Id
-	PointT start;
-	start.x = cloudId;
-	start.y = cloudId;
-	start.z = cloudId;
-	cloud->insert(cloud->begin() + 0, start);
-	float * p = (float *)cloud->points.data();
-	WebSockServer::Instance().Send(clientWs, (void *)p, cloud->points.size()*4*4, WsOpcode::BINARY);
+void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId) { 
+	float * p = (float *)cloud->points.data(); 
+	char *dataBuffer = new char[cloud->points.size() * 4 * 4+4+1];
+	memcpy(dataBuffer, "3", 1);
+	memcpy(dataBuffer + 1,&cloudId,4);
+	memcpy(dataBuffer + 1 +4, p, cloud->points.size() * 4 * 4);  
+	WebSockServer::Instance().Send(clientWs, dataBuffer, cloud->points.size() * 4 * 4 + 4 + 1); 
+	delete[] dataBuffer;
+ 
 }
-
-
-//控制点云数量
-pcl::PointCloud<PointT>::Ptr AlgoStream::checkSize(pcl::PointCloud<PointT>::Ptr cloud)
-{
-	pcl::PointCloud<PointT>::Ptr cloudList(new pcl::PointCloud<PointT>);
-	pcl::VoxelGrid<pcl::PointXYZ> voxel_grid; //声明一个滤波器
-	voxel_grid.setLeafSize(0.5, 0.5, 0.5);//定义滤波格子大小
-	voxel_grid.setInputCloud(cloud);//输入要滤波的点云
-	voxel_grid.filter(*cloudList);//将滤波后的数据赋值给这个点云
-	std::cout << "down size *cloud_src_o from " << cloud->size() << "to" << cloudList->size() << endl; //输出一段话 显示点云数量变化
-	return cloudList;
-	//const int MAX_SIZE = 101;
-	////控制点在10w以内
-	//if (cloud->points.size() > MAX_SIZE) {
-	//	pcl::PointCloud<PointT>::Ptr cloudList(new pcl::PointCloud<PointT>);
-	//	int pointsList[MAX_SIZE];
-	//	int index = 1;
-	//	cloudList->push_back(cloud->points[0]);
-	//	pointsList[0] = 0;
-	//	//随机生成10w点云
-	//	while (cloudList->points.size() < MAX_SIZE) {
-	//		//Json::Value point;
-	//		int x = rand() % (cloud->points.size() + 1);
-	//		int cout = std::count(begin(pointsList), end(pointsList), x);
-	//		if (cout != 0) {
-	//			continue;
-	//		}
-	//		PointT output = cloud->points[x];
-	//		cloudList->push_back(output);
-	//		pointsList[index] = x;
-	//		index = index + 1;
-	//	}
-	//	//free(pointsList);
-	//	return cloudList;
-	//}
-	//else {
-	//	return cloud;
-	//}
-}
+ 
 
 //开始执行算法流程
 void AlgoStream::start(){
@@ -253,40 +240,41 @@ void AlgoStream::start(){
 
 	clock_t start, end;
 	int cloudId = 0;
-	pcl::PointCloud<PointT>::Ptr pointCloudList(new pcl::PointCloud<PointT>);
-	pointCloudList->points.resize(10000);
+	curShowIdx = cloudId;
+
 	//循环获取点云数据
 	while (AlgoStream::running) {
 
 		//判断是否为空
-		if (cloudQueue.QueueEmpty()) {
+		if (CloudQueue::Instance().QueueEmpty() || cloudId-curShowIdx>10) {
 
 			//暂停1秒后再取
-			mySleep(1);
+			Sleep(100);
 			continue;
 		}
 		
+		
 		//获取队列中的点云数据
-		CloudQueue::CloudObj cloudObj = cloudQueue.DeQueue();
-		//获取点云
-		input = cloudObj.cloudList; 
+		CloudQueue::CloudObj cloudObj = CloudQueue::Instance().DeQueue();
+
 		//获取ID
 		int gcloudId = cloudObj.cloudId;
-
-		//合并追加点云
-		*pointCloudList += (*input); 
-
-		//发送点云数据
-		sendCloudData(input, gcloudId);
 		 
 
+		//发送点云数据
 		if (gcloudId != cloudId) {
+
 			cloudId = gcloudId;
+			pcl::PointCloud<PointT>::Ptr pointCloudList = CloudQueue::Instance().getCloud(); 
+
+			start = clock();
+			sendCloudData(pointCloudList, gcloudId);
+			end = clock();
+			cout << "all time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
 			try
 			{
 				//执行算法
-				for (int i = 0; i < size; i++) {
-					start = clock();
+				for (int i = 0; i < size; i++) { 
 
 					//节点开始
 					Json::Value root;
@@ -299,20 +287,15 @@ void AlgoStream::start(){
 
 					//调用函数fun1 
 					algos[i].runAddr(pointCloudList, algos[i].inputs, algos[i].outputs, algos[i].params);
-					end = clock();
-					cout << "run time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
-
+				 
+					start = clock();
 					//向前端输出本计算节点结果
 					sendNodeRes(algos[i]);
 					end = clock();
 					cout << "send time = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
 					 
 
-				}
-				//清空上一次点云数据释放内存
- 				pcl::PointCloud<PointT>::Ptr newPointCloudList(new pcl::PointCloud<PointT>);
-				//pointCloudList.reset();
-				*pointCloudList = *newPointCloudList;
+				}   
 
 			}
 			catch (exception e) {

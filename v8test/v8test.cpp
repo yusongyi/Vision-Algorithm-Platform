@@ -42,11 +42,7 @@ void parseStream(Json::Value root) {
 	new boost::thread(&AlgoStream::start, &stream);
 }
 
-void parseCloudQueue() {
-
-	//异步执行
-	new boost::thread(&CloudQueue::start, &cloudQueue);
-}
+ 
 
 
 void on_message(void* pClient, const std::string data, WsOpcode opcode)
@@ -71,18 +67,22 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			return;
 		}
 		//获取控制是否生成点云及发送点云参数
-		bool isStart = root["isStart"].asBool();
-		//开始生成点云数据}
-		cloudQueue.running = isStart;
-		stream.running = isStart;
-		if (isStart) { 
-			parseCloudQueue();
-			parseStream(root);
+		if (root["isStart"].isBool()) {
+			bool isStart = root["isStart"].asBool();
+			stream.running = isStart;
+			if (isStart) {
+				parseStream(root);
+			}
+
+		}
+		
+		if (root["curIdx"].isInt()) {
+			stream.curShowIdx = root["curIdx"].asInt();
 		}
 		 
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
-		cloudQueue.running = false;
+ 
 		stream.running = false;
 		std::cout << e.what() << std::endl;
 		return ;
@@ -101,8 +101,7 @@ void on_open(void* pClient)
 
 void on_close(void* pClient, std::string msg)
 { 
-	//关闭生成与发送点云
-	cloudQueue.running = false;
+	//关闭生成与发送点云 
 	stream.running = false;
 } 
 
@@ -127,39 +126,7 @@ static std::string readConfig(const char* path) {
  
 
 int _tmain(int argc, _TCHAR* argv[])
-{
-	//pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-	//for (int j = 0; j < 1000; ++j) {
-	//	float y = 0.1 * rand() / (RAND_MAX + 1.0f);
-	//	float x = 3 + 0 / 10.0 + y;
-	//	float z = 3 + j / 10.0 + y;
-	//	y = 4 + rand() / (RAND_MAX + 1.0f);
-	//	PointT p;
-	//	p.x = x;
-	//	p.y = z;
-	//	p.z = y;
-	//	cloud->push_back(p);
-	//}
-	//float * p = (float *)cloud->points.data();
-	//cout << cloud->points.size() << endl;
-
-	////--------------第一个点云----------------------
-	//cout << fixed << * p << endl;
-	//cout << fixed << *(p+1) << endl;
-	//cout << fixed << *(p+2) << endl;
-	//cout << fixed << *(p+3) << endl;//无用，忽略
-	//cout << (cloud->points.data() + 0)->x << endl;
-	//cout << (cloud->points.data() + 0)->y << endl;
-	//cout << (cloud->points.data() + 0)->z << endl;
-
-	////---------------第二个点云---------------------
-	//cout << fixed << *(p+4) << endl;
-	//cout << (cloud->points.data() + 1)->x << endl;
-
-	//return 0;
-
-
-	/////////////////////////////
+{ 
 	string configStr = readConfig("config.json");
 	Json::Reader configReader;
 	Json::Value config;
@@ -181,20 +148,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	);
 	WebSockServer::Instance().StartServer();
 	
+	//初始化队列以及模拟点云数据
+	CloudQueue::Instance().InitQueue();
+	//异步执行,向队列中填充点云
+	new boost::thread(&CloudQueue::start, &CloudQueue::Instance());
+
+	cout << "初始化成功！" << endl;
+
 	std::string str;
 	while (std::cin >> str)
-	{
-		if (pClient != nullptr)
+	{ 
+		if (str == "close")
 		{
-			if (str == "close")
-			{
-				WebSockServer::Instance().Close(pClient);
-			}
-			else
-			{
-				WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
-			}
-		}
+			return 0;
+		} 
 	} 
 	
 	

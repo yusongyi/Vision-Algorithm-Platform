@@ -27,6 +27,19 @@ enum StreamOpcode
 	STREAM_FAIL  = 9,
 
 };
+enum MsgType
+{
+
+	//算法运行过程中状态信息
+	STREAM_STATE = 1,
+
+	//节点输出结果
+	DEPTH_IMG = 2,
+
+	//点云数据
+	POINT_CLOUD = 3, 
+
+};
 
 //算法整体流程
 class AlgoStream
@@ -42,6 +55,9 @@ public:
 
 	//算法节点数量
 	int size;
+
+	//当前前端展示的点云ID,用于后端执行限流，否则可能导致websockt缓冲区变大
+	int curShowIdx;
 
 	//算法节点
 	AlgoNode* algos; 
@@ -77,11 +93,6 @@ public:
 	void sendMsg(StreamOpcode type, string msg);
 
 	//发送输入点云数据
-	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId);
-
-	//控制点的数量
-	pcl::PointCloud<PointT>::Ptr checkSize(pcl::PointCloud<PointT>::Ptr cloud);
-
-	//当前所使用的点云数据
-	pcl::PointCloud<PointT>::Ptr input;
+	void sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId); 
+	 
 };

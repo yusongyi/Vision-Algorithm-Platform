@@ -29,8 +29,9 @@ NodeOutput::~NodeOutput(void)
 		if (this->pointCloudList) {
 			 
 			//点云转深度图
-			string imgBase64 = rangeImage.pointsToImage(this->pointCloudList);
-			res["coeff"].append(imgBase64);
+			unsigned char *  res = rangeImage.pointsToImage(this->pointCloudList);
+			int size = 54 + this->pointCloudList->width*this->pointCloudList->height ;
+
 		}
 	}
 	else {

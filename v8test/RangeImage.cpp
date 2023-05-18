@@ -14,119 +14,81 @@
 #include <pcl/io/png_io.h>//保存深度图像
 #include <pcl/visualization/common/float_image_utils.h>//保存深度图像
 
-
+//BMP图片头字节数  头信息54字节，颜色表1024字节
+const int HEADER_BYTE_SIZE = 54 + 1024;
 
 typedef pcl::PointXYZ PointT;
-static const std::string base64_chars =
-"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-"abcdefghijklmnopqrstuvwxyz"
-"0123456789+/";
+ 
+// 点云范围映射到图像范围的函数
+inline int mapToImageRange(float value, float minValue, float maxValue) {
+	return static_cast<int>((value - minValue) / (maxValue - minValue) * 255);
+}
 
 
-string RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
+void write_bmpheader(unsigned char *bitmap, int offset, int bytes, int value)
 {
+	int i;
+	for (i = 0; i < bytes; i++)
+		bitmap[offset + i] = (value >> (i << 3)) & 0xFF;
+}
 
-	clock_t start, end;
-	start = clock(); 
+int RangeImage::getImgSize(pcl::PointCloud<PointT>::Ptr cloud) {
+	return  cloud->points.size() + HEADER_BYTE_SIZE;
+}
 
+unsigned char * RangeImage::pointsToImage(pcl::PointCloud<PointT>::Ptr cloud)
+{  
 	cloud->width = cloud->points.size()/1000;
 	cloud->height = 1000;
-	//生成时间戳
-	long long timeA = systemtime();
-	string imageName = "RangeImage_"+ longtostring(timeA)+".png";
+	int width = cloud->width;
+	int height = cloud->height;
+ 
 	//-------------------深度图的保存------------------------
+	 // 获取点云的最小和最大 Z 值
+	float minZ =1;
+	float maxZ = 4;
+ 
+	// 创建灰度图像像素数组 
+	unsigned char * imageData = new unsigned char[width * height];
+	int idx = 0;
+	// 将点云转换为灰度图像像素数组
+	for (const auto& point : cloud->points) { 
+		// 将点的 Z 值映射到 0-255 的区间作为灰度值
+		unsigned char grayscaleValue = static_cast<unsigned char>(mapToImageRange(point.y, minZ, maxZ)); 
+		imageData[idx++] = grayscaleValue; 
+	}
+ 
 
-	pcl::io::savePNGFile(imageName, *cloud, "z");
+	/*create a bmp format file*/
+	int bitmap_x = width ;
+	unsigned char *bitmap = (unsigned char*)malloc(sizeof(unsigned char)*height*bitmap_x + HEADER_BYTE_SIZE);
 
-	end = clock();
-	cout << "image time1 = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
+	bitmap[0] = 'B';
+	bitmap[1] = 'M';
+	write_bmpheader(bitmap, 2, 4, height*bitmap_x + HEADER_BYTE_SIZE); //whole file size
+	write_bmpheader(bitmap, 0xA, 4, HEADER_BYTE_SIZE); //offset before bitmap raw data
+	write_bmpheader(bitmap, 0xE, 4, 40); //length of bitmap info header
+	write_bmpheader(bitmap, 0x12, 4, width); //width
+	write_bmpheader(bitmap, 0x16, 4, height); //height
+	write_bmpheader(bitmap, 0x1A, 2, 1);
+	write_bmpheader(bitmap, 0x1C, 2, 8); //bit per pixel
+	write_bmpheader(bitmap, 0x1E, 4, 0); //compression
+	write_bmpheader(bitmap, 0x22, 4, height*bitmap_x); //size of bitmap raw data
+	for (int i = 0x26; i < 0x36; i++)
+		 bitmap[i] = 0;
 
-	start = clock();
-	//-------------------转成base64------------------------
-	std::fstream f;
-	f.open(imageName, std::ios::in | std::ios::binary);
-	f.seekg(0, std::ios_base::end);     //设置偏移量至文件结尾
-	std::streampos sp = f.tellg();      //获取文件大小
-	int size = sp;
-	char* buffer = (char*)malloc(sizeof(char) * size);
-	f.seekg(0, std::ios_base::beg);     //设置偏移量至文件开头
-	f.read(buffer, size);                //将文件内容读入buffer
-	std::string imgBase64 = base64_encode(buffer, size);
-	end = clock();
-	cout << "base64 time1 = " << double(end - start) / CLOCKS_PER_SEC << "s" << endl;
-	//关闭流
-	f.close();
-	//删除图片
-	const char *savePath = imageName.c_str();
-	remove(savePath);
-	return "data:image/jpeg;base64,"+imgBase64;
-}
-
-//图片转base64
-std::string RangeImage::base64_encode(const char * bytes_to_encode, unsigned int in_len)
-{
-	std::string ret;
-	int i = 0;
 	int j = 0;
-	unsigned char char_array_3[3];
-	unsigned char char_array_4[4];
-
-	while (in_len--)
-	{
-		char_array_3[i++] = *(bytes_to_encode++);
-		if (i == 3)
-		{
-			char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-			char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-			char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-			char_array_4[3] = char_array_3[2] & 0x3f;
-			for (i = 0; (i < 4); i++)
-			{
-				ret += base64_chars[char_array_4[i]];
-			}
-			i = 0;
-		}
+	for (int i = 0; i <= 255; i++) {
+		bitmap[54  + (j++)] = i;
+		bitmap[54  + (j++)] = i;
+		bitmap[54  + (j++)] = i;
+		bitmap[54  + (j++)] = 0; 
 	}
-	if (i)
-	{
-		for (j = i; j < 3; j++)
-		{
-			char_array_3[j] = '\0';
-		}
-
-		char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-		char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-		char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-		char_array_4[3] = char_array_3[2] & 0x3f;
-
-		for (j = 0; (j < i + 1); j++)
-		{
-			ret += base64_chars[char_array_4[j]];
-		}
-
-		while ((i++ < 3))
-		{
-			ret += '=';
-		}
-
-	}
-	return ret;
+	int k = HEADER_BYTE_SIZE;
+	memcpy(bitmap + k, imageData, height*width); 
+	delete[] imageData;
+	return  bitmap;
 }
+ 
 
-//生成时间戳
-long long RangeImage::systemtime()
-{
-	timeb t;
-	ftime(&t);
-	return t.time * 1000 + t.millitm;
-}
-
-//long转string
-string RangeImage::longtostring(long long t)
-{
-	std::string result;
-	stringstream ss;
-	ss << t;
-	ss >> result;
-	return result;
-}
+ 

@@ -8,14 +8,8 @@ class RangeImage
 public:
 
 	//点云转深度图base64格式
-	string pointsToImage(pcl::PointCloud<PointT>::Ptr cloud);
-
-	//图片转base64
-	std::string base64_encode(const char* bytes_to_encode, unsigned int in_len);
-
-	//生成时间戳
-	long long systemtime();
-
-	//long转string
-	string longtostring(long long t);
+	unsigned char * pointsToImage(pcl::PointCloud<PointT>::Ptr cloud);
+ 
+	//根据点云数据大小获取图片字节数
+	int getImgSize(pcl::PointCloud<PointT>::Ptr cloud);
 };

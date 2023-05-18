@@ -21,25 +21,17 @@ public:
 		CloudObj data[MAXSIZE];
 		int front;//头指针
 		int rear;//尾指针，队列非空时，指向队尾元素下个位置
-	}SQueue;
-	typedef struct {
-		int data[MAXSIZE];
-		int front;//头指针
-		int rear;//尾指针，队列非空时，指向队尾元素下个位置
-	}CQueue;
-	std::condition_variable not_empty_cv_;
-	mutable std::mutex mutex_;
+	}SQueue; 
 public:
-	SQueue Q;
-	CQueue CQ;
-	bool running = false;
+	SQueue Q;  
 	void InitQueue();
 	bool QueueFull();
 	bool QueueEmpty();
-	void EnQueue(CloudObj x);
+	void EnQueue(CloudObj x); 
 	CloudObj DeQueue();
+	pcl::PointCloud<PointT>::Ptr CloudQueue::getCloud();
 	int QueueSize();
-	void start();//生成点云
-	int cloudId;
+	void start();//生成点云 
+
+	static CloudQueue& Instance();
 };
-static CloudQueue cloudQueue;

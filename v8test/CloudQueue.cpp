@@ -2,22 +2,40 @@
 #include "CloudQueue.h"
 
 
+pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+pcl::PointCloud<PointT>::Ptr * cloudAry;
 void CloudQueue::InitQueue()
 {
-	cloudQueue.Q.front = cloudQueue.Q.rear = 0;
-	//将列队清空
+
+	Q.front = Q.rear = 0;
+	cloudAry = new pcl::PointCloud<PointT>::Ptr[1000];
+ 
+	for (int i = 0; i < 1000; ++i) { 
+		pcl::PointCloud<PointT>::Ptr cloudLine(new pcl::PointCloud<PointT>);
+		for (int j = 0; j < 1000; ++j) {
+			float y = 0.1 * rand() / (RAND_MAX + 1.0f);
+			float x = 3 + i / 10.0 + y;
+			float z = 3 + j / 10.0 + y;
+			y = 4 + rand() / (RAND_MAX + 1.0f);
+			PointT p;
+			p.x = x;
+			p.y = y;
+			p.z = z;
+			cloudLine->push_back(p);
+		}
+		cloudAry[i] = cloudLine;
+		*cloud += *cloudLine; 
+	} 
 }
 
 bool CloudQueue::QueueFull()
-{ 
-	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
-	return (cloudQueue.Q.rear + 1) % MAXSIZE == cloudQueue.Q.front;//加一取模
+{  
+	return (Q.rear + 1) % MAXSIZE == Q.front;//加一取模
 }
 
 bool CloudQueue::QueueEmpty()
-{ 
-	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
-	return cloudQueue.Q.front == cloudQueue.Q.rear;//当队列为空时front 和rear相等
+{  
+	return Q.front == Q.rear;//当队列为空时front 和rear相等
 }
 
 void CloudQueue::EnQueue(CloudQueue::CloudObj x)
@@ -26,10 +44,9 @@ void CloudQueue::EnQueue(CloudQueue::CloudObj x)
 		//是否为空队列
 	{
 		return;
-	} 
-	std::lock_guard<std::mutex> lk(cloudQueue.mutex_);
-	cloudQueue.Q.rear = (cloudQueue.Q.rear + 1) % MAXSIZE;//尾部指针后移，如到最后转到头部
-	cloudQueue.Q.data[cloudQueue.Q.rear] = x;//插入队尾
+	}  
+	Q.rear = (Q.rear + 1) % MAXSIZE;//尾部指针后移，如到最后转到头部
+	Q.data[Q.rear] = x;//插入队尾
 }
 
 CloudQueue::CloudObj CloudQueue::DeQueue()
@@ -37,60 +54,46 @@ CloudQueue::CloudObj CloudQueue::DeQueue()
 	if (QueueEmpty()) {
 		printf("队列已空! 出队失败!\n");
 		return{};
-	} 
-	std::lock_guard<std::mutex> lk(cloudQueue.mutex_);
-	cloudQueue.Q.front = (cloudQueue.Q.front + 1) % MAXSIZE;//队头指针后移，如到在最后转到头部
-	CloudObj x = cloudQueue.Q.data[cloudQueue.Q.front];
+	}  
+	Q.front = (Q.front + 1) % MAXSIZE;//队头指针后移，如到在最后转到头部
+	CloudObj x = Q.data[Q.front];
 	return x;
 }
 
 //获取队列长度
 int CloudQueue::QueueSize()
-{
-	std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
-	return cloudQueue.Q.rear >= cloudQueue.Q.front ? cloudQueue.Q.rear - cloudQueue.Q.front : cloudQueue.Q.rear - cloudQueue.Q.front + MAXSIZE;
+{ 
+	return Q.rear >= Q.front ? Q.rear - Q.front : Q.rear - Q.front + MAXSIZE;
 }
 
-
+pcl::PointCloud<PointT>::Ptr CloudQueue::getCloud()
+{
+	 
+	return cloud;
+}
+CloudQueue& CloudQueue::Instance()
+{
+	static CloudQueue instance;
+	return instance;
+}
 
 
 //创建随机点云数据集
 void CloudQueue::start()
-{
-	int index = 0;
+{ 
 	int cloudId = 0;
-	while (CloudQueue::running) {
-		pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-		cloud->points.resize(100);  
-			for (int j = 0; j < 100; ++j) {
-				float y = 0.1 * rand() / (RAND_MAX + 1.0f);
-				float x = 3 + index / 10.0 + y;
-				float z = 3 + j / 10.0 + y;
-				y = 3 +  rand() / (RAND_MAX + 1.0f);
-				PointT p;
-				p.x = x;
-				p.y = y;
-				p.z = z;
-				cloud->points[j] = p; 
+	while (true) {
+		if (QueueSize() < 10000) {
+			for (int i = 0; i < 1000; i++) {
+				//给结构体赋值
+				CloudQueue::CloudObj cloudObj = { cloudId, cloudAry[i], i };
+				//添加到队列
+				EnQueue(cloudObj);
 			} 
-		try {
-			//给结构体赋值
-			CloudQueue::CloudObj cloudObj = { cloudId, cloud, index};
-			//添加到队列
-			EnQueue(cloudObj);
-		}
-		catch (exception e) {
-			CloudQueue::running = false;
-		}
+			cloudId++; 
+		} 
 		//再等1秒再生点云
-		//Sleep(100);
-		++index;
-		if (index == 100) {
-			std::lock_guard<std::mutex> lock(cloudQueue.mutex_);
-			++cloudId;
-			cout << "setclouudId = " << cloudId << endl;
-			index = 0;
-		}
+		Sleep(100); 
 	}
 }
 
