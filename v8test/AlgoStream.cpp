@@ -218,11 +218,11 @@ input: 点云数据
 */
 void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId) { 
 	float * p = (float *)cloud->points.data(); 
-	char *dataBuffer = new char[cloud->points.size() * 4 * 4+4+1];
-	memcpy(dataBuffer, "3", 1);
-	memcpy(dataBuffer + 1,&cloudId,4);
-	memcpy(dataBuffer + 1 +4, p, cloud->points.size() * 4 * 4);  
-	WebSockServer::Instance().Send(clientWs, dataBuffer, cloud->points.size() * 4 * 4 + 4 + 1); 
+	char *dataBuffer = new char[cloud->points.size() * 4 * 4+4+4];
+	memcpy(dataBuffer, "3000", 4);
+	memcpy(dataBuffer + 4,&cloudId,4);
+	memcpy(dataBuffer + 4 +4, p, cloud->points.size() * 4 * 4);  
+	WebSockServer::Instance().Send(clientWs, dataBuffer, cloud->points.size() * 4 * 4 + 4 + 4); 
 	delete[] dataBuffer;
  
 }
@@ -246,7 +246,7 @@ void AlgoStream::start(){
 	while (AlgoStream::running) {
 
 		//判断是否为空
-		if (CloudQueue::Instance().QueueEmpty() || cloudId-curShowIdx>10) {
+		if (CloudQueue::Instance().QueueEmpty() || cloudId-curShowIdx>4) {
 
 			//暂停1秒后再取
 			Sleep(100);
