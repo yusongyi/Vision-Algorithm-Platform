@@ -219,6 +219,8 @@ input: 点云数据
 void AlgoStream::sendCloudData(pcl::PointCloud<PointT>::Ptr cloud, int cloudId) { 
 	float * p = (float *)cloud->points.data(); 
 	char *dataBuffer = new char[cloud->points.size() * 4 * 4+4+4];
+
+	//对齐四个字节，便于前端处理
 	memcpy(dataBuffer, "3000", 4);
 	memcpy(dataBuffer + 4,&cloudId,4);
 	memcpy(dataBuffer + 4 +4, p, cloud->points.size() * 4 * 4);  
