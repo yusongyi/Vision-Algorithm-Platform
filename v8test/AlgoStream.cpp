@@ -248,7 +248,7 @@ void AlgoStream::start(){
 	while (AlgoStream::running) {
 
 		//判断是否为空
-		if (CloudQueue::Instance().QueueEmpty() || cloudId-curShowIdx>4) {
+		if (CloudQueue::Instance().QueueEmpty() || cloudId-curShowIdx>1) {
 
 			//暂停1秒后再取
 			Sleep(100);
