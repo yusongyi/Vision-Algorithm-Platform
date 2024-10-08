@@ -51,6 +51,12 @@
     <ClInclude Include="topological_sort.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CloudQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RangeImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -81,6 +87,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="topological_sort.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CloudQueue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RangeImage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

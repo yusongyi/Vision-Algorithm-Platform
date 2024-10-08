@@ -214,3 +214,4 @@ static std::string readConfig(const char* path) {
 	delete[] buffer;
 	return text;
 }
+

@@ -43,7 +43,8 @@ public:
 	pClient为客户端标识
 	data 为要发送的数据
 	*/
-	bool Send(void* pClient, const std::string data, WsOpcode opcode = WsOpcode::BINARY);
+	bool Send(void* pClient, const std::string data);
+	bool Send(void* pClient, const void* data, int size);
 	void Close(void* pClient);
 	void CloseAll();
 private:

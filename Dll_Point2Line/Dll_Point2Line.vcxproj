@@ -91,13 +91,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;DLLSTATISTICALOUTLIERREMOVAL_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>F:\C\vcpkg\installed\x86-windows\include\eigen3;F:\C\vcpkg\installed\x86-windows\include\boost;F:\C\vcpkg\installed\x86-windows\include\vtk-9.0;F:\C\vcpkg\installed\x86-windows\include;D:\OneDrive - yusongyi\dev\ylkj_server\v8test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\CODE\vcpkg\installed\x86-windows\include\eigen3;E:\CODE\vcpkg\installed\x86-windows\include\boost;E:\CODE\vcpkg\installed\x86-windows\include\vtk-9.0;E:\CODE\vcpkg\installed\x86-windows\include;D:\OneDrive - yusongyi\dev\ylkj_server\v8test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>F:\C\vcpkg\installed\x86-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\CODE\vcpkg\installed\x86-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

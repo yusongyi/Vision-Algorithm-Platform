@@ -15,12 +15,14 @@
 #include <vector> 
 #include "web_sock_server.h"
 #include <boost/bind.hpp>
+#include "CloudQueue.h"
 using namespace std; 
  
 
 
 static AlgoStream stream;
 void* pClient = nullptr;
+int g_Flag = 0;
 
 
 void parseStream(Json::Value root) {
@@ -37,8 +39,10 @@ void parseStream(Json::Value root) {
 	}
 
 	//异步执行
-	new boost::thread(&AlgoStream::start, &stream); 
+	new boost::thread(&AlgoStream::start, &stream);
 }
+
+ 
 
 
 void on_message(void* pClient, const std::string data, WsOpcode opcode)
@@ -51,7 +55,6 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 	Json::Reader reader;
 	Json::Value root;
 
-
 	//保存本次计算的uuid和客户端socket通道
 	stream.clientWs = pClient;
 
@@ -63,9 +66,24 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 			printf("failed to parse!\n");
 			return;
 		}
-		parseStream(root);  
+		//获取控制是否生成点云及发送点云参数
+		if (root["isStart"].isBool()) {
+			bool isStart = root["isStart"].asBool();
+			stream.running = isStart;
+			if (isStart) {
+				parseStream(root);
+			}
+
+		}
+		
+		if (root["curIdx"].isInt()) {
+			stream.curShowIdx = root["curIdx"].asInt();
+		}
+		 
 	}catch (exception const & e) {
 		stream.sendMsg(STREAM_FAIL,string("error:")+string(e.what()));
+ 
+		stream.running = false;
 		std::cout << e.what() << std::endl;
 		return ;
 	}
@@ -74,12 +92,17 @@ void on_message(void* pClient, const std::string data, WsOpcode opcode)
 
 void on_open(void* pClient)
 {
+
 	::pClient = pClient;
+
+	
+
 }
 
 void on_close(void* pClient, std::string msg)
-{
-	//pClient = nullptr;
+{ 
+	//关闭生成与发送点云 
+	stream.running = false;
 } 
 
 //读取
@@ -103,8 +126,7 @@ static std::string readConfig(const char* path) {
  
 
 int _tmain(int argc, _TCHAR* argv[])
-{
- 
+{ 
 	string configStr = readConfig("config.json");
 	Json::Reader configReader;
 	Json::Value config;
@@ -115,41 +137,41 @@ int _tmain(int argc, _TCHAR* argv[])
 		return -1;
 	} 
 	stream.loadConfig(config);
-
+	
 	stream.loadDll();
-
-
+	
+	
 	WebSockServer::Instance().Init(9002,
 		boost::bind(on_open, _1),
 		boost::bind(on_close, _1, _2),
 		boost::bind(on_message, _1, _2, _3)
 	);
 	WebSockServer::Instance().StartServer();
+	
+	//初始化队列以及模拟点云数据
+	CloudQueue::Instance().InitQueue();
+	//异步执行,向队列中填充点云
+	new boost::thread(&CloudQueue::start, &CloudQueue::Instance());
+
+	cout << "初始化成功！" << endl;
 
 	std::string str;
 	while (std::cin >> str)
-	{
-		if (pClient != nullptr)
+	{ 
+		if (str == "close")
 		{
-			if (str == "close")
-			{
-				WebSockServer::Instance().Close(pClient);
-			}
-			else
-			{
-				WebSockServer::Instance().Send(pClient, str, WsOpcode::TEXT);
-			}
-		}
+			return 0;
+		} 
 	} 
-
-
+	
+	
 	/*cout << "开始解析脚本" << endl;
 	string doc("{\"type\":1,\"uuid\":\"1b8459b2-0297-4029-9f5b-bec5d2a6c27f\",\"doc\":[{\"nodeId\":\"P1\",\"method\":\"FileInput\",\"name\":\"FileInput\",\"chName\":\"输入点云\",\"inputs\":[],\"outputs\":[{\"pid\":\"P1\",\"id\":\"OUT111\",\"name\":\"上\",\"dataType\":1}],\"params\":[\"table.ply\"]},{\"nodeId\":\"P2\",\"name\":\"Shangbian\",\"chName\":\"上边\",\"method\":\"Shangbian\",\"inputs\":[{\"pid\":\"P2\",\"id\":\"INT222\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P2\",\"id\":\"OUT221\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P2\",\"id\":\"OUT222\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P2\",\"id\":\"OUT223\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P4\",\"name\":\"Jiaodian\",\"chName\":\"交点\",\"method\":\"Jiaodian\",\"inputs\":[{\"pid\":\"P4\",\"id\":\"INT441\",\"name\":\"特征一\",\"resourceId\":\"OUT222\",\"dataType\":3},{\"pid\":\"P4\",\"id\":\"INT442\",\"name\":\"特征二\",\"resourceId\":\"OUT332\",\"dataType\":3}],\"outputs\":[{\"pid\":\"P4\",\"id\":\"OUT441\",\"name\":\"交叉点\",\"dataType\":4}],\"params\":[1,-10,-0.2,0]},{\"nodeId\":\"P3\",\"name\":\"Zuobian\",\"chName\":\"左边\",\"method\":\"Zuobian\",\"inputs\":[{\"pid\":\"P3\",\"id\":\"INT333\",\"name\":\"来源\",\"resourceId\":\"OUT111\",\"dataType\":1}],\"outputs\":[{\"pid\":\"P3\",\"id\":\"OUT331\",\"name\":\"轮廓点云\",\"dataType\":1},{\"pid\":\"P3\",\"id\":\"OUT332\",\"name\":\"边缘线\",\"dataType\":3},{\"pid\":\"P3\",\"id\":\"OUT333\",\"name\":\"边缘平面\",\"dataType\":2}],\"params\":[1,-10,-0.2,0]}]}");
 	Json::Reader reader;
 	Json::Value root; 
 	reader.parse(doc, root, false);
 	parseStream(root);*/
-
+	
 	 
     system("pause");
     return 0;
